@@ -15,10 +15,6 @@ public class KDNode {
 	private BoundingBox boundingBox;
 	private List<Object3d> contained;
 	
-	public KDNode() {
-		this(null, null, new ArrayList<>());
-	}
-	
 	public KDNode(KDNode left, KDNode right, List<Object3d> objects) {
 		this.left = left;
 		this.right = right;
@@ -64,8 +60,14 @@ public class KDNode {
 		return "["+left+"|"+right+"]";
 	}
 	
-	public static KDNode build(List<Object3d> objects, int depth) {
+	public static KDNode build(KDNode root, List<Object3d> objects, int depth) {
 		KDNode node = new KDNode(null, null, objects);
+		
+		// Save memory by clearing objects from branching nodes
+		// Since these nodes will never be tested for intersections
+		if (root != null && root.getLeft() != null && root.getRight() != null) {
+			root.getObjects().clear();
+		}
 		
 		if (objects.size() < 2) {
 			return node;
@@ -113,8 +115,8 @@ public class KDNode {
 			node.setRight(new KDNode(null, null, rightmost));
 		}
 		else {
-			node.setLeft(build(leftmost, depth + 1));
-			node.setRight(build(rightmost, depth + 1));
+			node.setLeft(build(node, leftmost, depth + 1));
+			node.setRight(build(node, rightmost, depth + 1));
 		}
 		
 		return node;

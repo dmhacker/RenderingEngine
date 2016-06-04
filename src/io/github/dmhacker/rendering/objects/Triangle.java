@@ -11,6 +11,7 @@ import io.github.dmhacker.rendering.vectors.Vec3d;
 public class Triangle implements Object3d {
 	private List<Vec3d> vertices;
 	private Vec3d normal;
+	private Vec3d centroid;
 	private Properties properties;
 	private BoundingBox bbox;
 	
@@ -39,6 +40,8 @@ public class Triangle implements Object3d {
 		Vec3d e1 = v2.subtract(v1);
 		Vec3d e2 = v3.subtract(v1);
 		this.normal = e1.cross(e2).normalize();
+		
+		this.centroid = v1.add(v2).add(v3).divide(3.0);
 	}
 	
 	public List<Vec3d> getVertices() {
@@ -73,8 +76,7 @@ public class Triangle implements Object3d {
 	}
 	
 	public Vec3d getCenter() {
-		// Centroid of the triangle
-		return vertices.get(0).add(vertices.get(1)).add(vertices.get(2)).divide(3.0);
+		return centroid;
 	}
 	
 	@Override
