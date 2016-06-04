@@ -10,11 +10,11 @@
 * Multithreaded (default number of threads = system cores)
 * Uses Phong shading
 * Support for ray reflection
-* Support for multiple light sources
 * Support for camera translations (zoom)
-* Support for hard-coded spheres
+* Support for spheres
 * Support for triangular meshing
 * Support for STL files
+* Limited support for multiple light sources
 * Optimized using balanced KD tree
 * 's' key takes picture of current render
 
