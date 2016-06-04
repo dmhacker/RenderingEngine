@@ -16,7 +16,7 @@
 * Support for triangular meshing
 * Support for STL files
 * Optimized using balanced kd-tree [O(n) generation, O(log n) traversal]
-* Antialiasing (jittered antialiasing of variable sample size) for color smoothing [O(n^2) time]
+* Antialiasing (jittered antialiasing on n x n subcells of pixel) for color smoothing [O(n^2) time]
 * 's' key takes picture of current render 
 
 ## Future Improvements
