@@ -2,7 +2,7 @@
 
 <a><img src="https://github.com/dmhacker/RenderingEngine/blob/master/renders/92ae70a9-0d2e-4e1c-bf52-f4051ba47937.png" align="center"></a>
 
-<sub><sup>The Stanford Dragon. It took the rendering engine approximately 13 seconds to render all 100,000 of its facets on my laptop.</sup></sub>
+<sub><sup>The Stanford Dragon. It took the ray tracer approximately 13 seconds to render all 100,000 of its facets on my laptop. The pre-calculated kd-tree took 2 seconds to generate.</sup></sub>
 
 ## Specifications
 
@@ -11,10 +11,10 @@
 * Uses Phong shading
 * Support for ray reflection
 * Support for camera translations (zoom)
+* Support for multiple light sources
 * Support for spheres
 * Support for triangular meshing
 * Support for STL files
-* Support for multiple light sources
 * Optimized using balanced kd-tree
 * 's' key takes picture of current render
 
@@ -24,5 +24,6 @@
 * Vertex normal interpolation for mesh shading
 * Camera rotation
 * Support for refraction
+* Antialiasing
 
 
