@@ -10,6 +10,7 @@ import io.github.dmhacker.rendering.vectors.Vec3d;
 
 public class Triangle implements Object3d {
 	private List<Vec3d> vertices;
+	private Vec3d face;
 	private Vec3d normal;
 	private Vec3d centroid;
 	private Properties properties;
@@ -39,7 +40,8 @@ public class Triangle implements Object3d {
 		Vec3d v3 = vertices.get(2);
 		Vec3d e1 = v2.subtract(v1);
 		Vec3d e2 = v3.subtract(v1);
-		this.normal = e1.cross(e2).normalize();
+		this.face = e1.cross(e2);
+		this.normal = face.normalize();
 		
 		this.centroid = v1.add(v2).add(v3).divide(3.0);
 	}
@@ -62,17 +64,15 @@ public class Triangle implements Object3d {
 		calculate();
 	}
 	
-	public Vec3d getVertexNormal(Ray ray) {
-		return null;
-	}
-	
-	public Vec3d getNormal(Ray ray) {
-		double dp1 = ray.getDirection().dotProduct(normal);
-		double dp2 = ray.getDirection().dotProduct(normal.negative());
-		if (dp1 > dp2) {
+	public Vec3d getFaceNormal(Ray ray) {
+		if (ray.getDirection().dotProduct(normal) > ray.getDirection().dotProduct(normal.negative())) {
 			return normal.negative();
 		}
 		return normal;
+	}
+	
+	public Vec3d getFaceUnnormalized() {
+		return face;
 	}
 	
 	public Vec3d getCenter() {
@@ -118,7 +118,7 @@ public class Triangle implements Object3d {
 			return -1;
 		}
 		
-		Vec3d norm = getNormal(ray).negative();
+		Vec3d norm = getFaceNormal(ray).negative();
 		
 		// Does the ray intersect the triangular plane?
 		double denom = norm.dotProduct(ray.getDirection()); 

@@ -34,6 +34,9 @@ public class RayTracer extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private static final boolean KD_TREE_ENABLED = true;
+	private static final boolean ANTIALIASING_ENABLED = true;
+	
+	private static final int ANTIALIASING_SAMPLE_SUBDIVISIONS = 3;
 	
 	private static final int THREADS = Runtime.getRuntime().availableProcessors();
 	
@@ -138,11 +141,11 @@ public class RayTracer extends JPanel {
 		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
 		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(0, -0.5, 2), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1.0));
 		// Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(0, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(0, -0.3, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		// Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(0, -0.3, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
 		// Mesh langtonsAnt = new BinarySTLObject("C:/Users/David Hacker/3D Objects/langtonsant.stl", new Vec3d(0, -0.3, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		// Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb_wimpy.stl", new Vec3d(-0.5, -1, 1), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb_wimpy.stl", new Vec3d(-0.5, -1, 1), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
 		
-		addMesh(stanfordDragon);
+		addMesh(mandelbulb);
 
 		System.out.println("Rendering "+objects.size()+" polygons/spheres ...");
 
@@ -180,6 +183,9 @@ public class RayTracer extends JPanel {
 		rendering.set(true);
 		AtomicInteger threadsCompleted = new AtomicInteger();
 		AtomicInteger pixel = new AtomicInteger();
+		final double scale = 1.0 / Math.min(width, height);
+		final double sampleLength = scale / ANTIALIASING_SAMPLE_SUBDIVISIONS;
+		final int samples = ANTIALIASING_SAMPLE_SUBDIVISIONS * ANTIALIASING_SAMPLE_SUBDIVISIONS;
 		for (int t = 0; t < THREADS; t++) {
 			new Thread() {
 				
@@ -189,11 +195,31 @@ public class RayTracer extends JPanel {
 					while ((current = pixel.getAndIncrement()) < area) {
 						int px = current % width;
 						int py = current / width;
-						double minDim = Math.min(width, height);
-						double x = (px - width / 2) / minDim;
-						double y = (-py + height / 2) / minDim; 
-						Vec3d point = new Vec3d(x, y, 0); // Assuming image plane is at z = 0
-						float[] rawColor = cast(Ray.between(camera, point), 0);
+						double x = (px - width / 2) * scale;
+						double y = (-py + height / 2) * scale;
+						float[] rawColor;
+						// In both cases, it is assumed that the image plane is at z = 0
+						if (ANTIALIASING_ENABLED) {
+							rawColor = new float[3];
+							double minX = x - scale / 2;
+							double minY = y - scale / 2;
+							for (int i = 0; i < ANTIALIASING_SAMPLE_SUBDIVISIONS; i++) {
+								for (int j = 0; j < ANTIALIASING_SAMPLE_SUBDIVISIONS; j++) {
+									double nx = minX + i * sampleLength;
+									double ny = minY + j * sampleLength;
+									Vec3d point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0);
+									float[] sample = cast(Ray.between(camera, point), 0);
+									for (int k = 0; k < 3; k++)
+										rawColor[k] += sample[k];
+								}
+							}
+							for (int k = 0; k < 3; k++)
+								rawColor[k] = rawColor[k] / samples;
+						}
+						else {
+							Vec3d point = new Vec3d(x, y, 0); 
+							rawColor = cast(Ray.between(camera, point), 0);
+						}
 						image.setRGB(px, py, (255 << 24) | ((int) Math.min(rawColor[0], 255) << 16) | ((int) Math.min(rawColor[1], 255) << 8) | ((int) Math.min(rawColor[2], 255)));
 						repaint(px, py, 1, 1);
 					}
@@ -316,7 +342,7 @@ public class RayTracer extends JPanel {
 			normal = intersectionPoint.subtract(((Sphere) closest).getCenter()).normalize();
 		}
 		else if (closest instanceof Triangle) {
-			normal = ((Triangle) closest).getNormal(ray);
+			normal = ((Triangle) closest).getFaceNormal(ray);
 		}
 		for (Light light : lights) {
 			Vec3d lightVector = light.getPosition().subtract(intersectionPoint).normalize();
