@@ -14,7 +14,7 @@
 * Support for spheres
 * Support for triangular meshing
 * Support for STL files
-* Limited support for multiple light sources
+* Support for multiple light sources
 * Optimized using balanced KD tree
 * 's' key takes picture of current render
 
