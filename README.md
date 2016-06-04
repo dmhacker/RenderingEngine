@@ -1,8 +1,8 @@
 # RenderingEngine
 
-<a><img src="https://github.com/dmhacker/RenderingEngine/blob/master/renders/92ae70a9-0d2e-4e1c-bf52-f4051ba47937.png" align="center"></a>
+<a><img src="https://github.com/dmhacker/RenderingEngine/blob/master/renders/db9a349f-3e7f-4a18-b673-7d0bc3cf0f12.png" align="center"></a>
 
-<sub><sup>The Stanford Dragon. It took the ray tracer approximately 13 seconds to render all 100,000 of its facets on my laptop. The pre-calculated kd-tree took 2 seconds to generate.</sup></sub>
+<sub><sup>The Stanford Dragon. It took the ray tracer approximately 2 minutes to render all 100,000 of its facets on my laptop with supersampling (3x3 jittered antialiasing) enabled. Without supersampling, it would have taken 13 seconds. The pre-calculated kd-tree took approximately 500 milliseconds to generate.</sup></sub>
 
 ## Specifications
 
@@ -15,8 +15,9 @@
 * Support for spheres
 * Support for triangular meshing
 * Support for STL files
-* Optimized using balanced kd-tree
-* 's' key takes picture of current render
+* Optimized using balanced kd-tree [O(n) generation, O(log n) traversal]
+* Jittered antialiasing for color smoothing [O(n^2) time]
+* 's' key takes picture of current render 
 
 ## Future Improvements
 
@@ -24,6 +25,5 @@
 * Vertex normal interpolation for mesh shading
 * Camera rotation
 * Support for refraction
-* Antialiasing
 
 
