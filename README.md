@@ -15,7 +15,7 @@
 * Support for triangular meshing
 * Support for STL files
 * Support for multiple light sources
-* Optimized using balanced KD tree
+* Optimized using balanced kd-tree
 * 's' key takes picture of current render
 
 ## Future Improvements
