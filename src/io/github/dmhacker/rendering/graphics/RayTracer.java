@@ -35,8 +35,25 @@ public class RayTracer extends JPanel {
 	
 	private static final boolean KD_TREE_ENABLED = true;
 	private static final boolean ANTIALIASING_ENABLED = true;
+	private static final boolean GAUSSIAN_FILTER_ENABLED = false;
 	
 	private static final int ANTIALIASING_SAMPLE_SUBDIVISIONS = 3;
+	private static final int ANTIALIASING_SAMPLES = ANTIALIASING_SAMPLE_SUBDIVISIONS * ANTIALIASING_SAMPLE_SUBDIVISIONS;
+	private static final double GAUSSIAN_RMS_WIDTH = 1;
+	// Pre-calculations
+	private static final double GAUSSIAN_MEAN = (ANTIALIASING_SAMPLE_SUBDIVISIONS - 1) / 2.0;
+	private static final double GAUSSIAN_C_INV = 1.0 / (2.0 * GAUSSIAN_RMS_WIDTH * GAUSSIAN_RMS_WIDTH);
+	private static final double GAUSSIAN_SCALE;
+	
+	static {
+		double total = 0;
+		for (int i = 0; i < ANTIALIASING_SAMPLE_SUBDIVISIONS; i++) {
+			for (int j = 0; j < ANTIALIASING_SAMPLE_SUBDIVISIONS; j++) {
+				total += gaussian(i - GAUSSIAN_MEAN, j - GAUSSIAN_MEAN);
+			}
+		}
+		GAUSSIAN_SCALE = 1.0 / total;
+	}
 	
 	private static final int THREADS = Runtime.getRuntime().availableProcessors();
 	
@@ -189,7 +206,6 @@ public class RayTracer extends JPanel {
 		AtomicInteger pixel = new AtomicInteger();
 		final double scale = 1.0 / Math.min(width, height);
 		final double sampleLength = scale / ANTIALIASING_SAMPLE_SUBDIVISIONS;
-		final int samples = ANTIALIASING_SAMPLE_SUBDIVISIONS * ANTIALIASING_SAMPLE_SUBDIVISIONS;
 		for (int t = 0; t < THREADS; t++) {
 			new Thread() {
 				
@@ -213,12 +229,24 @@ public class RayTracer extends JPanel {
 									double ny = minY + j * sampleLength;
 									Vec3d point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0);
 									float[] sample = cast(Ray.between(camera, point), 0);
-									for (int k = 0; k < 3; k++)
-										rawColor[k] += sample[k];
+									if (GAUSSIAN_FILTER_ENABLED) {
+										for (int k = 0; k < 3; k++)
+											rawColor[k] += gaussian(i - GAUSSIAN_MEAN, j - GAUSSIAN_MEAN) * sample[k];
+									}
+									else {
+										for (int k = 0; k < 3; k++)
+											rawColor[k] += sample[k];
+									}
 								}
 							}
-							for (int k = 0; k < 3; k++)
-								rawColor[k] = rawColor[k] / samples;
+							if (GAUSSIAN_FILTER_ENABLED) {
+								for (int i = 0; i < 3; i++)
+									rawColor[i] *= GAUSSIAN_SCALE;
+							}
+							else {
+								for (int i = 0; i < 3; i++)
+									rawColor[i] /= ANTIALIASING_SAMPLES;
+							}
 						}
 						else {
 							Vec3d point = new Vec3d(x, y, 0); 
@@ -232,8 +260,12 @@ public class RayTracer extends JPanel {
 				
 			}.start();
 		}
+		
+		// Busy waiting
 		while (threadsCompleted.get() < THREADS);
+		
 		rendering.set(false);
+		
 		long renderTime = System.currentTimeMillis() - timestamp;
 		System.out.println("Render time: "+renderTime+"ms ("+Math.round(renderTime / 1000.0)+"s)");
 	}
@@ -414,5 +446,12 @@ public class RayTracer extends JPanel {
     		g.drawImage(image, 0, 0, null);
         }
     }
+
+	// Two dimensional gaussian function according to
+	// http://homepages.inf.ed.ac.uk/rbf/HIPR2/gsmooth.htm
+	// Removed the A parameter [sqrt(1 / (2 * pi * c^2)] because curve is scaled at the end
+	private static double gaussian(double i, double j) {
+		return Math.exp(-(i * i + j * j) * GAUSSIAN_C_INV);
+	}
 
 }
