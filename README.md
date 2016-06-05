@@ -1,8 +1,8 @@
 # RenderingEngine
 
-<a><img src="https://github.com/dmhacker/RenderingEngine/blob/master/renders/db9a349f-3e7f-4a18-b673-7d0bc3cf0f12.png" align="center"></a>
+<a><img src="https://github.com/dmhacker/RenderingEngine/blob/master/renders/75d33ebd-fc3d-4c0b-8ed6-03f4fda55b4f.png" align="center"></a>
 
-<sub><sup>The Stanford Dragon. It took the ray tracer approximately 2 minutes to render all 100,000 of its facets on my laptop with antialiasing (3x3 jittered supersampling) enabled. Without antialiasing, it would have taken 13 seconds. The pre-calculated kd-tree took approximately 500 milliseconds to generate.</sup></sub>
+<sub><sup>From left to right: the Stanford Dragon, the Mandelbulb, and the Stanford Bunny. It took the ray tracer approximately 150 seconds (2.5 minutes) to render their combined 1,064,374 facets on my laptop with antialiasing (3x3 jittered supersampling) enabled. Without antialiasing, it would have taken approximately 20 seconds. The pre-calculated kd-tree took 7-8 seconds to generate.</sup></sub>
 
 ## Specifications
 
