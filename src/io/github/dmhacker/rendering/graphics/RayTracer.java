@@ -135,16 +135,19 @@ public class RayTracer extends JPanel {
 		objects.add(topLeftPortion);
 		objects.add(bottomRightPortion);
 		
-		// Mesh mobius = new TextSTLObject("C:/Users/David Hacker/3D Objects/mobius.stl", new Vec3d(0, -0.8, 2), true, new Properties(new Color(140, 21, 21), Material.OPAQUE, 1, 1));
+		// Mesh unistablePolyhedron = new TextSTLObject("C:/Users/David Hacker/3D Objects/Unistable-Polyhedron.stl", new Vec3d(-1, 0, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
+		// Mesh mobius = new TextSTLObject("C:/Users/David Hacker/3D Objects/mobius.stl", new Vec3d(-1, -0.8, 2), true, new Properties(new Color(140, 21, 21), Material.OPAQUE, 1, 1));
 		// Mesh mobius2 = new TextSTLObject("C:/Users/David Hacker/3D Objects/mobius_2.stl", new Vec3d(0, -0.8, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 1, 1));
-		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 2), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
+		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
 		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
 		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(0, -0.5, 2), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1.0));
-		// Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(0, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		// Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(0, -0.3, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
+		Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
 		// Mesh langtonsAnt = new BinarySTLObject("C:/Users/David Hacker/3D Objects/langtonsant.stl", new Vec3d(0, -0.3, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb_wimpy.stl", new Vec3d(-0.5, -1, 1), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb_wimpy.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
 		
+		addMesh(stanfordDragon);
+		addMesh(stanfordBunny);
 		addMesh(mandelbulb);
 
 		System.out.println("Rendering "+objects.size()+" polygons/spheres ...");
@@ -152,7 +155,8 @@ public class RayTracer extends JPanel {
 		if (KD_TREE_ENABLED) {
 			long timestamp = System.currentTimeMillis();
 			this.tree = KDNode.build(null, objects, 0);
-			System.out.println("Tree generation: "+(System.currentTimeMillis() - timestamp)+"ms");
+			long generationTime = System.currentTimeMillis() - timestamp;
+			System.out.println("Tree generation: "+generationTime+"ms ("+Math.round(generationTime / 1000.0)+"s)");
 			// System.out.println("Tree: "+tree);
 		}
 		
@@ -230,7 +234,8 @@ public class RayTracer extends JPanel {
 		}
 		while (threadsCompleted.get() < THREADS);
 		rendering.set(false);
-		System.out.println("Render time: "+(System.currentTimeMillis() - timestamp)+"ms");
+		long renderTime = System.currentTimeMillis() - timestamp;
+		System.out.println("Render time: "+renderTime+"ms ("+Math.round(renderTime / 1000.0)+"s)");
 	}
 	
 	private Object[] parseTree(KDNode node, Ray ray) {
