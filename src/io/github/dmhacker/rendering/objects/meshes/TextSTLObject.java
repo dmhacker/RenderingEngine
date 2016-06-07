@@ -2,14 +2,19 @@ package io.github.dmhacker.rendering.objects.meshes;
 
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import io.github.dmhacker.rendering.objects.Properties;
 import io.github.dmhacker.rendering.objects.Triangle;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
 public class TextSTLObject implements Mesh {
+	private Map<Vec3d, Set<Triangle>> vertexMap;
 	private List<Triangle> facets;
 	
 	public TextSTLObject(String fileName, Vec3d center, boolean flip, Properties properties) {
@@ -36,7 +41,7 @@ public class TextSTLObject implements Mesh {
 							new Vec3d(num.get(6), num.get(8), num.get(7)), 
 							new Vec3d(num.get(9), num.get(11), num.get(10))
 					};
-					facets.add(new Triangle(pos[0], pos[1], pos[2], properties));
+					facets.add(new Triangle(this, pos[0], pos[1], pos[2], properties));
 					for (Vec3d vertex : pos) {
 						scalar = Math.max(scalar, vertex.getX());
 						scalar = Math.max(scalar, vertex.getY());
@@ -52,9 +57,28 @@ public class TextSTLObject implements Mesh {
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
+		
+		this.vertexMap = new HashMap<Vec3d, Set<Triangle>>();
+		for (Triangle triangle : facets) {
+			for (Vec3d vertex : triangle.getVertices()) {
+				if (vertexMap.containsKey(vertex)) {
+					vertexMap.get(vertex).add(triangle);
+				}
+				else {
+					Set<Triangle> triangles = new HashSet<Triangle>();
+					triangles.add(triangle);
+					vertexMap.put(vertex, triangles);
+				}
+			}
+		}
 	}
 
 	public List<Triangle> getFacets() {
 		return facets;
+	}
+
+	@Override
+	public Map<Vec3d, Set<Triangle>> getVertexMap() {
+		return vertexMap;
 	}
 }

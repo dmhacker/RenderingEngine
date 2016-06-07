@@ -23,6 +23,10 @@ public class Ray {
 		return inverseDirection;
 	}
 	
+	public void rotateDirection(Quaternion q) {
+		direction = direction.rotate(q).normalize();
+	}
+	
 	public Vec3d evaluate(double t) {
 		return origin.add(direction.multiply(t));
 	}

@@ -27,20 +27,20 @@ import io.github.dmhacker.rendering.objects.Triangle;
 import io.github.dmhacker.rendering.objects.meshes.BinarySTLObject;
 import io.github.dmhacker.rendering.objects.meshes.Mesh;
 import io.github.dmhacker.rendering.objects.meshes.TextSTLObject;
+import io.github.dmhacker.rendering.vectors.Quaternion;
 import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
 public class RayTracer extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
-	private static final boolean KD_TREE_ENABLED = true;
-	private static final boolean ANTIALIASING_ENABLED = true;
-	private static final boolean GAUSSIAN_FILTER_ENABLED = false;
+	public static final boolean KD_TREE_ENABLED = true;
+	public static final boolean REFLECTION_ENABLED = true;
+	public static final boolean ANTIALIASING_ENABLED = false;
+	public static final boolean VERTEX_NORMAL_INTERPOLATION = false;
 	
 	private static final int ANTIALIASING_SAMPLE_SUBDIVISIONS = 3;
-	private static final int ANTIALIASING_SAMPLES = ANTIALIASING_SAMPLE_SUBDIVISIONS * ANTIALIASING_SAMPLE_SUBDIVISIONS;
-	private static final double GAUSSIAN_RMS_WIDTH = 1;
-	// Pre-calculations
+	private static final double GAUSSIAN_RMS_WIDTH = 1; // A very high width will act like a box filter
 	private static final double GAUSSIAN_MEAN = (ANTIALIASING_SAMPLE_SUBDIVISIONS - 1) / 2.0;
 	private static final double GAUSSIAN_C_INV = 1.0 / (2.0 * GAUSSIAN_RMS_WIDTH * GAUSSIAN_RMS_WIDTH);
 	private static final double GAUSSIAN_SCALE;
@@ -76,6 +76,7 @@ public class RayTracer extends JPanel {
 	private final int area;
 	
 	private Vec3d camera;
+	private Quaternion cameraRotation;
 	private List<Object3d> objects;
 	private List<Light> lights;
 	
@@ -119,6 +120,7 @@ public class RayTracer extends JPanel {
 		});
 		
 		this.camera = new Vec3d(0, 0.3, -1);
+		this.cameraRotation = new Quaternion(2, 0, 0, 1).normalize();
 		
 		this.lights = new ArrayList<Light>() {
 			private static final long serialVersionUID = 1L;
@@ -144,10 +146,10 @@ public class RayTracer extends JPanel {
 		Vec3d bottomLeft = new Vec3d(-10000, surfaceY, -10000);
 		Vec3d topRight = new Vec3d(10000, surfaceY, 10000);
 		Vec3d bottomRight = new Vec3d(10000, surfaceY, -10000);
-		Properties floorProperties = new Properties(new Color(86, 47, 14), Material.SHINY, 0.5, 1);
+		Properties floorProperties = new Properties(new Color(86, 47, 14), Material.SHINY, 0.2, 1);
 		
-		Triangle topLeftPortion = new Triangle(bottomLeft, topLeft, topRight, floorProperties);
-		Triangle bottomRightPortion = new Triangle(bottomLeft, bottomRight, topRight, floorProperties);
+		Triangle topLeftPortion = new Triangle(null, bottomLeft, topLeft, topRight, floorProperties);
+		Triangle bottomRightPortion = new Triangle(null, bottomLeft, bottomRight, topRight, floorProperties);
 		
 		objects.add(topLeftPortion);
 		objects.add(bottomRightPortion);
@@ -155,17 +157,20 @@ public class RayTracer extends JPanel {
 		// Mesh unistablePolyhedron = new TextSTLObject("C:/Users/David Hacker/3D Objects/Unistable-Polyhedron.stl", new Vec3d(-1, 0, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
 		// Mesh mobius = new TextSTLObject("C:/Users/David Hacker/3D Objects/mobius.stl", new Vec3d(-1, -0.8, 2), true, new Properties(new Color(140, 21, 21), Material.OPAQUE, 1, 1));
 		// Mesh mobius2 = new TextSTLObject("C:/Users/David Hacker/3D Objects/mobius_2.stl", new Vec3d(0, -0.8, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 1, 1));
-		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
+		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 1.4), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
 		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
 		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(0, -0.5, 2), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1.0));
-		Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		// Mesh langtonsAnt = new BinarySTLObject("C:/Users/David Hacker/3D Objects/langtonsant.stl", new Vec3d(0, -0.3, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb_wimpy.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		// Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
+		// Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		// Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb_wimpy.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		Mesh cat = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Cat.stl", new Vec3d(0, -1, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
 		
-		addMesh(stanfordDragon);
-		addMesh(stanfordBunny);
-		addMesh(mandelbulb);
+		addMesh(cat);
+		// addMesh(mobius2);
+		// addMesh(teapot);
+		// addMesh(stanfordDragon);
+		// addMesh(stanfordBunny);
+		// addMesh(mandelbulb);
 
 		System.out.println("Rendering "+objects.size()+" polygons/spheres ...");
 
@@ -227,29 +232,17 @@ public class RayTracer extends JPanel {
 								for (int j = 0; j < ANTIALIASING_SAMPLE_SUBDIVISIONS; j++) {
 									double nx = minX + i * sampleLength;
 									double ny = minY + j * sampleLength;
-									Vec3d point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0);
+									Vec3d point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0).rotate(cameraRotation);
 									float[] sample = cast(Ray.between(camera, point), 0);
-									if (GAUSSIAN_FILTER_ENABLED) {
-										for (int k = 0; k < 3; k++)
-											rawColor[k] += gaussian(i - GAUSSIAN_MEAN, j - GAUSSIAN_MEAN) * sample[k];
-									}
-									else {
-										for (int k = 0; k < 3; k++)
-											rawColor[k] += sample[k];
-									}
+									for (int k = 0; k < 3; k++)
+										rawColor[k] += gaussian(i - GAUSSIAN_MEAN, j - GAUSSIAN_MEAN) * sample[k];
 								}
 							}
-							if (GAUSSIAN_FILTER_ENABLED) {
-								for (int i = 0; i < 3; i++)
-									rawColor[i] *= GAUSSIAN_SCALE;
-							}
-							else {
-								for (int i = 0; i < 3; i++)
-									rawColor[i] /= ANTIALIASING_SAMPLES;
-							}
+							for (int i = 0; i < 3; i++)
+								rawColor[i] *= GAUSSIAN_SCALE;
 						}
 						else {
-							Vec3d point = new Vec3d(x, y, 0); 
+							Vec3d point = new Vec3d(x, y, 0).rotate(cameraRotation); 
 							rawColor = cast(Ray.between(camera, point), 0);
 						}
 						image.setRGB(px, py, (255 << 24) | ((int) Math.min(rawColor[0], 255) << 16) | ((int) Math.min(rawColor[1], 255) << 8) | ((int) Math.min(rawColor[2], 255)));
@@ -379,7 +372,7 @@ public class RayTracer extends JPanel {
 			normal = intersectionPoint.subtract(((Sphere) closest).getCenter()).normalize();
 		}
 		else if (closest instanceof Triangle) {
-			normal = ((Triangle) closest).getFaceNormal(ray);
+			normal = ((Triangle) closest).getNormal(ray, intersectionPoint);
 		}
 		for (Light light : lights) {
 			Vec3d lightVector = light.getPosition().subtract(intersectionPoint).normalize();
@@ -403,7 +396,7 @@ public class RayTracer extends JPanel {
 				colors[2] += ba + bd;
 			}
 		}
-		if (depth < RECURSIVE_DEPTH) {
+		if (REFLECTION_ENABLED && depth < RECURSIVE_DEPTH) {
 			Material material = closest.getProperties().getMaterial();
 			if (material == Material.SHINY || material == Material.SHINY_AND_TRANSPARENT) {
 				double kr = closest.getProperties().getReflectivity();

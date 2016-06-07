@@ -5,13 +5,18 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import io.github.dmhacker.rendering.objects.Properties;
 import io.github.dmhacker.rendering.objects.Triangle;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
 public class BinarySTLObject implements Mesh {
+	private Map<Vec3d, Set<Triangle>> vertexMap;
 	private List<Triangle> facets;
 	
 	public BinarySTLObject(String fileName, Vec3d center, boolean flip, Properties properties) {
@@ -50,7 +55,7 @@ public class BinarySTLObject implements Mesh {
 					scalar = Math.max(scalar, Math.abs(vertex[1]));
 					scalar = Math.max(scalar, Math.abs(vertex[2]));
 				}
-				Triangle facet = new Triangle(vertices.get(0), vertices.get(1), vertices.get(2), properties);
+				Triangle facet = new Triangle(this, vertices.get(0), vertices.get(1), vertices.get(2), properties);
 				facets.add(facet);
 			}
 			for (Triangle triangle : facets) {
@@ -60,11 +65,28 @@ public class BinarySTLObject implements Mesh {
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
+		
+		this.vertexMap = new HashMap<Vec3d, Set<Triangle>>();
+		for (Triangle triangle : facets) {
+			for (Vec3d vertex : triangle.getVertices()) {
+				if (vertexMap.containsKey(vertex)) {
+					vertexMap.get(vertex).add(triangle);
+				}
+				else {
+					Set<Triangle> triangles = new HashSet<Triangle>();
+					triangles.add(triangle);
+					vertexMap.put(vertex, triangles);
+				}
+			}
+		}
 	}
 
 	public List<Triangle> getFacets() {
 		return facets;
 	}
 
-
+	@Override
+	public Map<Vec3d, Set<Triangle>> getVertexMap() {
+		return vertexMap;
+	}
 }

@@ -4,19 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.dmhacker.rendering.Constants;
+import io.github.dmhacker.rendering.graphics.RayTracer;
 import io.github.dmhacker.rendering.kdtrees.BoundingBox;
+import io.github.dmhacker.rendering.objects.meshes.Mesh;
 import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
 public class Triangle implements Object3d {
+	private Mesh mesh;
 	private List<Vec3d> vertices;
 	private Vec3d face;
-	private Vec3d normal;
+	private Vec3d faceNormal;
 	private Vec3d centroid;
 	private Properties properties;
 	private BoundingBox bbox;
 	
-	public Triangle(Vec3d v1, Vec3d v2, Vec3d v3, Properties properties) {
+	public Triangle(Mesh mesh, Vec3d v1, Vec3d v2, Vec3d v3, Properties properties) {
+		
+		this.mesh = mesh;
 
 		this.vertices = new ArrayList<Vec3d>() {
 			private static final long serialVersionUID = 1L;
@@ -41,7 +46,7 @@ public class Triangle implements Object3d {
 		Vec3d e1 = v2.subtract(v1);
 		Vec3d e2 = v3.subtract(v1);
 		this.face = e1.cross(e2);
-		this.normal = face.normalize();
+		this.faceNormal = face.normalize();
 		
 		this.centroid = v1.add(v2).add(v3).divide(3.0);
 	}
@@ -64,15 +69,34 @@ public class Triangle implements Object3d {
 		calculate();
 	}
 	
-	public Vec3d getFaceNormal(Ray ray) {
-		if (ray.getDirection().dotProduct(normal) > ray.getDirection().dotProduct(normal.negative())) {
-			return normal.negative();
+	public Vec3d getNormal(Ray ray, Vec3d intersection) {
+		if (mesh == null || !RayTracer.VERTEX_NORMAL_INTERPOLATION) {
+			return getFaceNormal(ray);
 		}
-		return normal;
+		return getVertexNormal(ray, intersection);
 	}
 	
-	public Vec3d getFaceUnnormalized() {
-		return face;
+	public Vec3d getFaceNormal(Ray ray) {
+		if (ray.getDirection().dotProduct(faceNormal) > ray.getDirection().dotProduct(faceNormal.negative())) {
+			return faceNormal.negative();
+		}
+		return faceNormal;
+	}
+	
+	public Vec3d getVertexNormal(Ray ray, Vec3d intersection) {
+		Vec3d n = new Vec3d();
+		for (Vec3d v : vertices) {
+			Vec3d vertexNormal = new Vec3d();
+			for (Triangle t : mesh.getVertexMap().get(v)) {
+				vertexNormal = vertexNormal.add(t.faceNormal);
+			}
+			n = n.add(vertexNormal.divide(v.subtract(intersection).distance()));
+		}
+		n = n.normalize();
+		if (ray.getDirection().dotProduct(n) > ray.getDirection().dotProduct(n.negative())) {
+			return n.negative();
+		}
+		return n;
 	}
 	
 	public Vec3d getCenter() {
@@ -150,17 +174,6 @@ public class Triangle implements Object3d {
 	}
 	
 	@Override
-	public boolean equals(Object o) {
-		if (o != null && o instanceof Triangle) {
-			Triangle t = (Triangle) o;
-			return  vertices.get(0).equals(t.vertices.get(0)) &&
-					vertices.get(1).equals(t.vertices.get(1)) &&
-					vertices.get(2).equals(t.vertices.get(2));
-		}
-		return false;
-	}
-	
-	@Override
 	public Properties getProperties() {
 		return properties;
 	}
@@ -177,5 +190,16 @@ public class Triangle implements Object3d {
 	@Override
 	public BoundingBox getBoundingBox() {
 		return bbox;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o != null && o instanceof Triangle) {
+			Triangle t = (Triangle) o;
+			return  vertices.get(0).equals(t.vertices.get(0)) &&
+					vertices.get(1).equals(t.vertices.get(1)) &&
+					vertices.get(2).equals(t.vertices.get(2));
+		}
+		return false;
 	}
 }

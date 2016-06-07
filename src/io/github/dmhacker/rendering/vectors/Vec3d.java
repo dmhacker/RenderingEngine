@@ -2,10 +2,15 @@ package io.github.dmhacker.rendering.vectors;
 
 import io.github.dmhacker.rendering.Constants;
 
+// Immutable
 public class Vec3d {
 	private final double x;
 	private final double y;
 	private final double z;
+	
+	public Vec3d() {
+		this(0, 0, 0);
+	}
 	
 	public Vec3d(double x, double y, double z) {
 		this.x = x;
@@ -53,6 +58,11 @@ public class Vec3d {
 		return Math.sqrt(distanceSquared());
 	}
 	
+	public Vec3d rotate(Quaternion q) {
+		Vec3d t = q.getAxisVector().cross(this).multiply(2);
+		return add(t.multiply(q.getW())).add(q.getAxisVector().cross(t));
+	}
+	
 	public double distanceSquared() {
 		return x * x  + y * y + z * z;
 	}
@@ -69,6 +79,12 @@ public class Vec3d {
 		return z;
 	}
 	
+	@Override
+	public int hashCode() {
+		return new Double(x).hashCode() + new Double(y).hashCode() + new Double(z).hashCode();
+	}
+	
+	@Override
 	public boolean equals(Object o) {
 		if (o == null)
 			return false;
