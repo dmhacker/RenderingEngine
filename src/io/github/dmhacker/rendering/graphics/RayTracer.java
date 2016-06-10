@@ -36,7 +36,7 @@ public class RayTracer extends JPanel {
 	
 	public static final boolean KD_TREE_ENABLED = true;
 	public static final boolean REFLECTION_ENABLED = true;
-	public static final boolean ANTIALIASING_ENABLED = false;
+	public static final boolean ANTIALIASING_ENABLED = true;
 	public static final boolean VERTEX_NORMAL_INTERPOLATION = false;
 	
 	private static final int ANTIALIASING_SAMPLE_SUBDIVISIONS = 3;
@@ -120,7 +120,7 @@ public class RayTracer extends JPanel {
 		});
 		
 		this.camera = new Vec3d(0, 0.3, -1);
-		this.cameraRotation = new Quaternion(2, 0, 0, 1).normalize();
+		this.cameraRotation = new Quaternion(0, 0, 0, 0).normalize();
 		
 		this.lights = new ArrayList<Light>() {
 			private static final long serialVersionUID = 1L;
@@ -139,7 +139,7 @@ public class RayTracer extends JPanel {
 		objects.add(sp1);
 		objects.add(sp2);
 		objects.add(sp3);
-
+		
 		// Regular floor
 		double surfaceY = -1;
 		Vec3d topLeft = new Vec3d(-10000, surfaceY, 10000);
@@ -160,17 +160,19 @@ public class RayTracer extends JPanel {
 		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 1.4), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
 		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
 		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(0, -0.5, 2), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1.0));
-		// Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		// Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		// Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb_wimpy.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		Mesh cat = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Cat.stl", new Vec3d(0, -1, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
+		Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
+		Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		// Mesh cat = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Cat.stl", new Vec3d(0, -1, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
+		Mesh skull = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Skull.stl", new Vec3d(0, -1, 1.5), false, new Properties(Color.WHITE, Material.OPAQUE, .2, 1));
+		// Mesh theOneRing = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TheOneRing.stl", new Vec3d(0, -1, 1), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
 		
-		addMesh(cat);
+		addMesh(skull);
 		// addMesh(mobius2);
 		// addMesh(teapot);
-		// addMesh(stanfordDragon);
-		// addMesh(stanfordBunny);
-		// addMesh(mandelbulb);
+		addMesh(stanfordDragon);
+		addMesh(stanfordBunny);
+		addMesh(mandelbulb);
 
 		System.out.println("Rendering "+objects.size()+" polygons/spheres ...");
 

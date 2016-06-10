@@ -4,8 +4,12 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
+
+import io.github.dmhacker.rendering.Main;
 
 public class RenderFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -24,6 +28,11 @@ public class RenderFrame extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
 		setTitle("3D Rendering Engine");
+		try {
+			setIconImage(ImageIO.read(Main.class.getResourceAsStream("icon.png")));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	
 		this.panel = new RayTracer(width, height);
 		add(panel);
