@@ -15,6 +15,7 @@
 * Support for spheres
 * Support for triangular meshing
 * Support for STL files
+* Support for vertex normal interpolation (uses barycentric coordinates)
 * Optimized using balanced kd-tree [O(n) generation, O(log n) traversal]
 * Antialiasing (jittered antialiasing on n x n subcells of pixel) for color smoothing [O(n^2) time]
 * Support for both gaussian and box filters [no performance difference with either]
@@ -22,9 +23,7 @@
 
 ## Future Improvements
 
-* Use surface area heuristic (SAH) to produce a better kd-tree
-* Vertex normal interpolation for mesh shading
-* Camera rotation
 * Support for refraction
+* Better camera rotation
 
 
