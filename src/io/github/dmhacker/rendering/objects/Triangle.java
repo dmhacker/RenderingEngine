@@ -70,10 +70,18 @@ public class Triangle implements Object3d {
 	}
 	
 	public Vec3d getNormal(Ray ray, Vec3d intersection) {
-		if (mesh == null || !RayTracer.VERTEX_NORMAL_INTERPOLATION) {
-			return getFaceNormal(ray);
+		if (mesh != null && RayTracer.VERTEX_NORMAL_INTERPOLATION_ENABLED) {
+			return getVertexNormal(ray, intersection);
 		}
-		return getVertexNormal(ray, intersection);
+		return getFaceNormal(ray);
+	}
+	
+	public Vec3d getFaceVector() {
+		return face;
+	}
+	
+	public Vec3d getFaceNormal() {
+		return faceNormal;
 	}
 	
 	public Vec3d getFaceNormal(Ray ray) {
@@ -84,19 +92,43 @@ public class Triangle implements Object3d {
 	}
 	
 	public Vec3d getVertexNormal(Ray ray, Vec3d intersection) {
+		double[] bary = getBarycentricCoordinates(intersection);
 		Vec3d n = new Vec3d();
+		int counter = 0;
 		for (Vec3d v : vertices) {
 			Vec3d vertexNormal = new Vec3d();
 			for (Triangle t : mesh.getVertexMap().get(v)) {
-				vertexNormal = vertexNormal.add(t.faceNormal);
+				vertexNormal = vertexNormal.add(t.getFaceVector());
 			}
-			n = n.add(vertexNormal.divide(v.subtract(intersection).distance()));
+			n = n.add(vertexNormal.normalize().multiply(bary[counter]));
+			counter++;
 		}
 		n = n.normalize();
 		if (ray.getDirection().dotProduct(n) > ray.getDirection().dotProduct(n.negative())) {
 			return n.negative();
 		}
 		return n;
+	}
+	
+	public double[] getBarycentricCoordinates(Vec3d intersectionPoint) {
+		Vec3d v1 = vertices.get(0);
+		Vec3d v2 = vertices.get(1);
+		Vec3d v3 = vertices.get(2);
+		
+	    Vec3d u = v2.subtract(v1);
+	    Vec3d v = v3.subtract(v1);
+	    Vec3d w = intersectionPoint.subtract(v1);
+
+	    Vec3d vCrossW = v.cross(w);
+	    Vec3d uCrossW = u.cross(w); 
+	    Vec3d uCrossV = u.cross(v);
+
+	    double denom = uCrossV.distance();
+	    double r = vCrossW.distance() / denom;
+	    double t = uCrossW.distance() / denom;
+
+	    double[] bary = {1 - r - t, r, t};
+	    return bary;
 	}
 	
 	public Vec3d getCenter() {
@@ -131,17 +163,13 @@ public class Triangle implements Object3d {
 			return -1; 
 		 
 		double t = v0v2.dotProduct(qvec) * invDet; 
-		if (t < Constants.EPSILON)
+		if (t <= Constants.EPSILON)
 			return -1;
 		
 		return t;
 	}
 	
 	protected double simpleIntersection(Ray ray) {
-		if (bbox.intersects(ray) == -1) {
-			return -1;
-		}
-		
 		Vec3d norm = getFaceNormal(ray).negative();
 		
 		// Does the ray intersect the triangular plane?

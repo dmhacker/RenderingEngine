@@ -58,24 +58,6 @@ public class BoundingBox {
 		}
 	}
 	
-	public int getLongestAxis() {
-		double xaxis = boundingBox[1] - boundingBox[0]; // #0
-		double yaxis = boundingBox[3] - boundingBox[2]; // #1
-		double zaxis = boundingBox[5] - boundingBox[4]; // #2
-		if (xaxis > yaxis) {
-			if (xaxis > zaxis) {
-				return 0;
-			}
-			else {
-				return 1;
-			}
-		}
-		if (yaxis > zaxis) {
-			return 1;
-		}
-		return 2;
-	}
-	
 	public boolean contains(Vec3d point) {
 		return 	point.getX() >= boundingBox[0] && 
 				point.getX() <= boundingBox[1] && 
@@ -85,7 +67,7 @@ public class BoundingBox {
 				point.getZ() <= boundingBox[5];  
 	}
 	
-	public double intersects(Ray ray) {
+	public boolean isIntersecting(Ray ray) {
 		Vec3d origin = ray.getOrigin();
 		Vec3d dirFrac = ray.getInverseDirection();
 		
@@ -99,11 +81,7 @@ public class BoundingBox {
 		double tmin = Math.max(Math.max(Math.min(t1, t2), Math.min(t3, t4)), Math.min(t5, t6));
 		double tmax = Math.min(Math.min(Math.max(t1, t2), Math.max(t3, t4)), Math.max(t5, t6));
 		
-		if (tmin > tmax) {
-		    return -1;
-		}
-		
-		return tmin;
+		return tmin <= tmax;
 	}
 	
 	public static BoundingBox fromObjects(List<Object3d> objects) {

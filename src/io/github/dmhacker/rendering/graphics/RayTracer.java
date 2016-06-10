@@ -36,8 +36,9 @@ public class RayTracer extends JPanel {
 	
 	public static final boolean KD_TREE_ENABLED = true;
 	public static final boolean REFLECTION_ENABLED = true;
+	public static final boolean VERTEX_NORMAL_INTERPOLATION_ENABLED = true;
 	public static final boolean ANTIALIASING_ENABLED = true;
-	public static final boolean VERTEX_NORMAL_INTERPOLATION = false;
+	public static final boolean ROTATION_ENABLED = false;
 	
 	private static final int ANTIALIASING_SAMPLE_SUBDIVISIONS = 3;
 	private static final double GAUSSIAN_RMS_WIDTH = 1; // A very high width will act like a box filter
@@ -119,19 +120,15 @@ public class RayTracer extends JPanel {
 			
 		});
 		
-		this.camera = new Vec3d(0, 0.3, -1);
+		this.camera = new Vec3d(0, 0.25, -1);
 		this.cameraRotation = new Quaternion(0, 0, 0, 0).normalize();
 		
-		this.lights = new ArrayList<Light>() {
-			private static final long serialVersionUID = 1L;
-
-		{
-			add(new Light(new Vec3d(0, 4, -3), 0.5));
-		}};
+		this.lights = new ArrayList<>();
+		lights.add(new Light(new Vec3d(0, 4, -3), 0.5));
 		
 		this.objects = new ArrayList<>();
 
-		Properties sphericalMirror = new Properties(new Color(221, 207, 153), Material.SHINY, 0.7, 1);
+		Properties sphericalMirror = new Properties(new Color(192, 192, 192), Material.SHINY, 0.7, 1);
 		Sphere sp1 = new Sphere(-3, 0, 6, 1, sphericalMirror);
 		Sphere sp2 = new Sphere(0, 0, 6, 1, sphericalMirror);
 		Sphere sp3 = new Sphere(3, 0, 6, 1, sphericalMirror);
@@ -140,14 +137,12 @@ public class RayTracer extends JPanel {
 		objects.add(sp2);
 		objects.add(sp3);
 		
-		// Regular floor
+		Properties floorProperties = new Properties(new Color(128, 128, 128), Material.SHINY, 0.2, 1);
 		double surfaceY = -1;
 		Vec3d topLeft = new Vec3d(-10000, surfaceY, 10000);
 		Vec3d bottomLeft = new Vec3d(-10000, surfaceY, -10000);
 		Vec3d topRight = new Vec3d(10000, surfaceY, 10000);
 		Vec3d bottomRight = new Vec3d(10000, surfaceY, -10000);
-		Properties floorProperties = new Properties(new Color(86, 47, 14), Material.SHINY, 0.2, 1);
-		
 		Triangle topLeftPortion = new Triangle(null, bottomLeft, topLeft, topRight, floorProperties);
 		Triangle bottomRightPortion = new Triangle(null, bottomLeft, bottomRight, topRight, floorProperties);
 		
@@ -155,24 +150,21 @@ public class RayTracer extends JPanel {
 		objects.add(bottomRightPortion);
 		
 		// Mesh unistablePolyhedron = new TextSTLObject("C:/Users/David Hacker/3D Objects/Unistable-Polyhedron.stl", new Vec3d(-1, 0, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		// Mesh mobius = new TextSTLObject("C:/Users/David Hacker/3D Objects/mobius.stl", new Vec3d(-1, -0.8, 2), true, new Properties(new Color(140, 21, 21), Material.OPAQUE, 1, 1));
-		// Mesh mobius2 = new TextSTLObject("C:/Users/David Hacker/3D Objects/mobius_2.stl", new Vec3d(0, -0.8, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 1, 1));
 		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 1.4), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
 		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
-		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(0, -0.5, 2), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1.0));
-		Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(0, -0.5, 2), false, new Properties(new Color(255, 189, 23), Material.SHINY, 0.5, 1.0));
+		// Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
+		// Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(0, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.SHINY, 0.3, 1));
+		// Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
 		// Mesh cat = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Cat.stl", new Vec3d(0, -1, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
-		Mesh skull = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Skull.stl", new Vec3d(0, -1, 1.5), false, new Properties(Color.WHITE, Material.OPAQUE, .2, 1));
+		Mesh skull = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Skull.stl", new Vec3d(0, -1, 1.2), false, new Properties(Color.WHITE, Material.OPAQUE, 0.4, 1));
 		// Mesh theOneRing = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TheOneRing.stl", new Vec3d(0, -1, 1), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
-		
+
+		// addMesh(torusKnot);
 		addMesh(skull);
-		// addMesh(mobius2);
-		// addMesh(teapot);
-		addMesh(stanfordDragon);
-		addMesh(stanfordBunny);
-		addMesh(mandelbulb);
+		// addMesh(stanfordDragon);
+		// addMesh(stanfordBunny);
+		// addMesh(mandelbulb);
 
 		System.out.println("Rendering "+objects.size()+" polygons/spheres ...");
 
@@ -234,7 +226,11 @@ public class RayTracer extends JPanel {
 								for (int j = 0; j < ANTIALIASING_SAMPLE_SUBDIVISIONS; j++) {
 									double nx = minX + i * sampleLength;
 									double ny = minY + j * sampleLength;
-									Vec3d point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0).rotate(cameraRotation);
+									Vec3d point;
+									if (ROTATION_ENABLED)
+										point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0).rotate(cameraRotation);
+									else
+										point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0);
 									float[] sample = cast(Ray.between(camera, point), 0);
 									for (int k = 0; k < 3; k++)
 										rawColor[k] += gaussian(i - GAUSSIAN_MEAN, j - GAUSSIAN_MEAN) * sample[k];
@@ -244,7 +240,11 @@ public class RayTracer extends JPanel {
 								rawColor[i] *= GAUSSIAN_SCALE;
 						}
 						else {
-							Vec3d point = new Vec3d(x, y, 0).rotate(cameraRotation); 
+							Vec3d point;
+							if (ROTATION_ENABLED)
+								point = new Vec3d(x, y, 0).rotate(cameraRotation); 
+							else
+								point = new Vec3d(x, y, 0);
 							rawColor = cast(Ray.between(camera, point), 0);
 						}
 						image.setRGB(px, py, (255 << 24) | ((int) Math.min(rawColor[0], 255) << 16) | ((int) Math.min(rawColor[1], 255) << 8) | ((int) Math.min(rawColor[2], 255)));
@@ -266,7 +266,7 @@ public class RayTracer extends JPanel {
 	}
 	
 	private Object[] parseTree(KDNode node, Ray ray) {
-		if (node.getBoundingBox().intersects(ray) != -1) {
+		if (node.getBoundingBox().isIntersecting(ray)) {
 			
 			if (node.isLeaf()) {
 				double tMin = Double.MAX_VALUE;

@@ -79,7 +79,7 @@ public class KDNode {
 		}
 		midpoint = midpoint.divide(objects.size());
 		
-		int axis = depth % 3; // node.getBoundingBox().getLongestAxis();
+		int axis = depth % 3;
 		List<Object3d> leftmost = new ArrayList<Object3d>();
 		List<Object3d> rightmost = new ArrayList<Object3d>();
 		for (Object3d obj : objects) {
