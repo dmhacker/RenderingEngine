@@ -2,7 +2,7 @@
 
 <a><img src="https://github.com/dmhacker/RenderingEngine/blob/master/renders/06a77d44-b66b-4933-a4ff-dcda2e8b0f6b.png" align="center"></a>
 
-<sub><sup>The Stanford Dragon. It took the ray tracer approximately 150 seconds to render its 100,000 facets on my laptop with antialiasing and ray reflection enabled. Without antialiasing, it would have taken approximately 20 seconds.</sup></sub>
+<sub><sup>The Stanford Dragon. It took the ray tracer approximately 150 seconds to render its 100,000 facets on my laptop with antialiasing enabled. Without antialiasing, it would have taken approximately 20 seconds.</sup></sub>
 
 ## Specifications
 
