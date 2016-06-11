@@ -25,6 +25,7 @@ import io.github.dmhacker.rendering.objects.Properties;
 import io.github.dmhacker.rendering.objects.Sphere;
 import io.github.dmhacker.rendering.objects.Triangle;
 import io.github.dmhacker.rendering.objects.meshes.BinarySTLObject;
+import io.github.dmhacker.rendering.objects.meshes.GenericMesh;
 import io.github.dmhacker.rendering.objects.meshes.Mesh;
 import io.github.dmhacker.rendering.objects.meshes.TextSTLObject;
 import io.github.dmhacker.rendering.vectors.Quaternion;
@@ -58,8 +59,7 @@ public class RayTracer extends JPanel {
 	
 	private static final int THREADS = Runtime.getRuntime().availableProcessors();
 	
-	private static final double KD = 0.9; // Light diffusion
-	private static final double KA = 0.1; // Light ambiance
+	private static final double LIGHT_AMBIENCE = 0.1;
 	
 	private static final int RECURSIVE_DEPTH = 6;
 	
@@ -121,12 +121,14 @@ public class RayTracer extends JPanel {
 		});
 		
 		this.camera = new Vec3d(0, 0.25, -1);
-		this.cameraRotation = new Quaternion(0, 0, 0, 0).normalize();
+		this.cameraRotation = new Quaternion(5, 0, 1, 0).normalize();
 		
 		this.lights = new ArrayList<>();
-		lights.add(new Light(new Vec3d(0, 4, -3), 0.5));
+		lights.add(new Light(new Vec3d(0, 4, -3), 0.5, 0.9, 1.0, 1000));
 		
 		this.objects = new ArrayList<>();
+		
+		addFloor(-1);
 
 		Properties sphericalMirror = new Properties(new Color(192, 192, 192), Material.SHINY, 0.7, 1);
 		Sphere sp1 = new Sphere(-3, 0, 6, 1, sphericalMirror);
@@ -137,45 +139,48 @@ public class RayTracer extends JPanel {
 		objects.add(sp2);
 		objects.add(sp3);
 		
-		Properties floorProperties = new Properties(new Color(128, 128, 128), Material.SHINY, 0.2, 1);
-		double surfaceY = -1;
-		Vec3d topLeft = new Vec3d(-10000, surfaceY, 10000);
-		Vec3d bottomLeft = new Vec3d(-10000, surfaceY, -10000);
-		Vec3d topRight = new Vec3d(10000, surfaceY, 10000);
-		Vec3d bottomRight = new Vec3d(10000, surfaceY, -10000);
-		Triangle topLeftPortion = new Triangle(null, bottomLeft, topLeft, topRight, floorProperties);
-		Triangle bottomRightPortion = new Triangle(null, bottomLeft, bottomRight, topRight, floorProperties);
-		
-		objects.add(topLeftPortion);
-		objects.add(bottomRightPortion);
-		
-		// Mesh unistablePolyhedron = new TextSTLObject("C:/Users/David Hacker/3D Objects/Unistable-Polyhedron.stl", new Vec3d(-1, 0, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 1.4), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
+		// Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1.0, 2), false, new Properties(new Color(255, 255, 255), Material.SHINY, 0.4, 1));
 		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), false, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
 		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(0, -0.5, 2), false, new Properties(new Color(255, 189, 23), Material.SHINY, 0.5, 1.0));
 		// Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1, -1.05, 1.5), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.5, 1));
-		// Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(0, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.SHINY, 0.3, 1));
+		Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(0, -0.33, 1.5), false, new Properties(new Color(140, 21, 21), Material.SHINY, 0.3, 1));
 		// Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		// Mesh cat = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Cat.stl", new Vec3d(0, -1, 2), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
-		Mesh skull = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Skull.stl", new Vec3d(0, -1, 1.2), false, new Properties(Color.WHITE, Material.OPAQUE, 0.4, 1));
-		// Mesh theOneRing = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TheOneRing.stl", new Vec3d(0, -1, 1), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, .2, 1));
-
+		// Mesh skull = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Skull.stl", new Vec3d(0, -1, 1.2), false, new Properties(Color.WHITE, Material.OPAQUE, 0.4, 1));
+		// Mesh halfDonut = new TextSTLObject("C:/Users/David Hacker/3D Objects/HalfDonut.stl", new Vec3d(0.5, 0, 1), true, new Properties(new Color(255, 189, 23), Material.SHINY, 0.3, 1.0));
+		
+		// addMesh(teapot);
 		// addMesh(torusKnot);
-		addMesh(skull);
-		// addMesh(stanfordDragon);
+		// addMesh(skull);
+		addMesh(stanfordDragon);
 		// addMesh(stanfordBunny);
 		// addMesh(mandelbulb);
 
-		System.out.println("Rendering "+objects.size()+" polygons/spheres ...");
+		System.out.println("Rendering "+objects.size()+" objects ...");
 
 		if (KD_TREE_ENABLED) {
 			long timestamp = System.currentTimeMillis();
 			this.tree = KDNode.build(null, objects, 0);
 			long generationTime = System.currentTimeMillis() - timestamp;
-			System.out.println("Tree generation: "+generationTime+"ms ("+Math.round(generationTime / 1000.0)+"s)");
-			// System.out.println("Tree: "+tree);
-		}
+			System.out.println("kd-tree generation: "+generationTime+"ms ("+Math.round(generationTime / 1000.0)+"s)");
+		}	
+	}
+	
+	public void addFloor(double surfaceY) {
+		Vec3d topLeft = new Vec3d(-10000, surfaceY, 10000);
+		Vec3d bottomLeft = new Vec3d(-10000, surfaceY, -10000);
+		Vec3d topRight = new Vec3d(10000, surfaceY, 10000);
+		Vec3d bottomRight = new Vec3d(10000, surfaceY, -10000);
+
+		Properties floorProperties = new Properties(new Color(128, 128, 128), Material.SHINY, 0.2, 1);
+		Triangle topLeftPortion = new Triangle(null, bottomLeft, topLeft, topRight, floorProperties);
+		Triangle bottomRightPortion = new Triangle(null, bottomLeft, bottomRight, topRight, floorProperties);
 		
+		List<Triangle> floorTriangles = new ArrayList<Triangle>();
+		floorTriangles.add(topLeftPortion);
+		floorTriangles.add(bottomRightPortion);
+		GenericMesh floorMesh = new GenericMesh(floorTriangles);
+		
+		addMesh(floorMesh);
 	}
 	
 	public void addMesh(Mesh mesh) {
@@ -297,7 +302,7 @@ public class RayTracer extends JPanel {
 			}
 			
 			if (leftNode[0] == null && rightNode[0] == null) {
-				return new Object[] {null, Double.MAX_VALUE};
+				return leftNode; // Could be either
 			}
 			if (leftNode[0] == null && rightNode[0] != null) {
 				return rightNode;
@@ -338,26 +343,6 @@ public class RayTracer extends JPanel {
 			}
 		}
 		
-		// Check if light is closer
-		Light closestLight = null;
-		double tLight = Double.MAX_VALUE;
-		for (Light light : lights) {
-			double t = light.getIntersection(ray);
-			if (t > 0 && t < tLight && t < tMin) {
-				closestLight = light;
-				tLight = t;
-			}
-		}
-		
-		// If light is closer, color light (no gradient)
-		if (closestLight != null) {
-			colors[0] = closestLight.getColor().getRed();
-			colors[1] = closestLight.getColor().getGreen();
-			colors[2] = closestLight.getColor().getBlue();
-			return colors;
-		}
-		
-		
 		if (closest == null) {
 			if (depth > 0) {
 				// If we don't do this, the objects tend to develop a shade of the background color.
@@ -378,24 +363,28 @@ public class RayTracer extends JPanel {
 		}
 		for (Light light : lights) {
 			Vec3d lightVector = light.getPosition().subtract(intersectionPoint).normalize();
+			Vec3d halfwayVector = lightVector.subtract(ray.getDirection()).normalize();
 			Color color = closest.getProperties().getColor();
-			double dot = lightVector.dotProduct(normal);
-			double factor = Math.max(0, dot);
-			double ra = KA * color.getRed();
-			double ga = KA * color.getGreen();
-			double ba = KA * color.getBlue();
-			double rd = KD * factor * color.getRed();
-			double gd = KD * factor * color.getGreen();
-			double bd = KD * factor * color.getBlue();
+			double diffuseIntensity = Math.max(0, lightVector.dotProduct(normal));
+			double specularIntensity = Math.pow(Math.max(0, halfwayVector.dotProduct(normal)), light.getSpecularHardness());
+			double ra = LIGHT_AMBIENCE * color.getRed();
+			double ga = LIGHT_AMBIENCE * color.getGreen();
+			double ba = LIGHT_AMBIENCE * color.getBlue();
+			double rd = light.getDiffusePower() * diffuseIntensity * color.getRed();
+			double gd = light.getDiffusePower() * diffuseIntensity * color.getGreen();
+			double bd = light.getDiffusePower() * diffuseIntensity * color.getBlue();
+			double rs = light.getSpecularPower() * specularIntensity * color.getRed();
+			double gs = light.getSpecularPower() * specularIntensity * color.getGreen();
+			double bs = light.getSpecularPower() * specularIntensity * color.getBlue();
 			if (castShadow(Ray.between(intersectionPoint, light.getPosition()), light)) {
 				colors[0] += ra;
 				colors[1] += ga;
 				colors[2] += ba;
 			}
 			else {
-				colors[0] += ra + rd;
-				colors[1] += ga + gd;
-				colors[2] += ba + bd;
+				colors[0] += ra + rd + rs;
+				colors[1] += ga + gd + gs;
+				colors[2] += ba + bd + bs;
 			}
 		}
 		if (REFLECTION_ENABLED && depth < RECURSIVE_DEPTH) {
@@ -439,7 +428,7 @@ public class RayTracer extends JPanel {
     protected void paintComponent(Graphics g) {
     	synchronized(image) {
     		g.drawImage(image, 0, 0, null);
-        }
+    	}
     }
 
 	// Two dimensional gaussian function according to
