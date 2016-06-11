@@ -23,6 +23,7 @@
 
 ## Future Improvements
 
+* Texture mapping
 * Support for refraction
 * Better camera rotation
 
