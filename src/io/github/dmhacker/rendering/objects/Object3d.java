@@ -17,4 +17,6 @@ public interface Object3d {
 	public Vec3d getCenter();
 	
 	public BoundingBox getBoundingBox();
+	
+	public boolean isTransparent();
 }

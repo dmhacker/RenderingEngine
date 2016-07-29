@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.dmhacker.rendering.Constants;
-import io.github.dmhacker.rendering.graphics.RayTracer;
+import io.github.dmhacker.rendering.graphics.RayTracerOption;
 import io.github.dmhacker.rendering.kdtrees.BoundingBox;
 import io.github.dmhacker.rendering.objects.meshes.Mesh;
 import io.github.dmhacker.rendering.vectors.Ray;
@@ -70,7 +70,7 @@ public class Triangle implements Object3d {
 	}
 	
 	public Vec3d getNormal(Ray ray, Vec3d intersection) {
-		if (mesh != null && RayTracer.VERTEX_NORMAL_INTERPOLATION_ENABLED) {
+		if (mesh != null && RayTracerOption.VERTEX_NORMAL_INTERPOLATION.get()) {
 			return getVertexNormal(ray, intersection);
 		}
 		return getFaceNormal(ray);
@@ -218,6 +218,11 @@ public class Triangle implements Object3d {
 	@Override
 	public BoundingBox getBoundingBox() {
 		return bbox;
+	}
+
+	@Override
+	public boolean isTransparent() {
+		return properties.getMaterial() == Material.TRANSPARENT || properties.getMaterial() == Material.SHINY_AND_TRANSPARENT;
 	}
 	
 	@Override

@@ -17,7 +17,7 @@ public class TextSTLObject implements Mesh {
 	private Map<Vec3d, Set<Triangle>> vertexMap;
 	private List<Triangle> facets;
 	
-	public TextSTLObject(String fileName, Vec3d center, boolean flip, Properties properties) {
+	public TextSTLObject(String fileName, Vec3d center, double scale, Properties properties) {
 		try {
 			this.facets = new ArrayList<>();
 			Scanner sc = new Scanner(new FileReader(fileName));
@@ -27,12 +27,12 @@ public class TextSTLObject implements Mesh {
 			while(sc.hasNext()){
 				num = new ArrayList<Double>(12);
 				String facet = sc.next();
-				String[] bits = facet.split("[^0123456789.-]");
+				String[] bits = facet.split(" ");
 				for(String bit: bits){
 					try{
 						num.add(Double.parseDouble(bit.trim()));
 					} catch(Exception e){
-						
+
 					}
 				}
 				if(num.size() == 12){
@@ -50,7 +50,7 @@ public class TextSTLObject implements Mesh {
 				}
 			}
 			for (Triangle triangle : facets) {
-				triangle.scale((flip ? -1.0 : 1.0) / scalar);
+				triangle.scale(scale / scalar);
 				triangle.translate(center);
 			}
 			sc.close();

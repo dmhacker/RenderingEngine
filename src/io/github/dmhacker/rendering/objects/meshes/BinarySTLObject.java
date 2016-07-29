@@ -19,7 +19,7 @@ public class BinarySTLObject implements Mesh {
 	private Map<Vec3d, Set<Triangle>> vertexMap;
 	private List<Triangle> facets;
 	
-	public BinarySTLObject(String fileName, Vec3d center, boolean flip, Properties properties) {
+	public BinarySTLObject(String fileName, Vec3d center, double scale, Properties properties) {
 		try {
 			File file = new File(fileName);
 			byte[] bytes = new byte[(int) file.length()];
@@ -59,7 +59,7 @@ public class BinarySTLObject implements Mesh {
 				facets.add(facet);
 			}
 			for (Triangle triangle : facets) {
-				triangle.scale((flip ? -1.0 : 1.0) / scalar);
+				triangle.scale(scale / scalar);
 				triangle.translate(center);
 			}
 		} catch (Exception ex) {

@@ -78,4 +78,9 @@ public class Sphere implements Object3d {
 	public BoundingBox getBoundingBox() {
 		return bbox;
 	}
+
+	@Override
+	public boolean isTransparent() {
+		return properties.getMaterial() == Material.TRANSPARENT || properties.getMaterial() == Material.SHINY_AND_TRANSPARENT;
+	}
 }

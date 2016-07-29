@@ -11,8 +11,8 @@ public class Light {
 	private double ks;
 	private double sh;
 	
-	public Light(Vec3d position, double radius, double diffuse, double specular, double specularHardness) {
-		this.sphere = new Sphere(position, radius, new Properties());
+	public Light(Color color, Vec3d position, double diffuse, double specular, double specularHardness) {
+		this.sphere = new Sphere(position, 1.0 / Math.log(specularHardness), new Properties(color, Material.OPAQUE, 0, 1));
 		this.kd = diffuse;
 		this.ks = specular;
 		this.sh = specularHardness;
@@ -20,6 +20,10 @@ public class Light {
 	
 	public Color getColor() {
 		return sphere.getProperties().getColor();
+	}
+	
+	public double getRadius() {
+		return sphere.getRadius();
 	}
 	
 	public Vec3d getPosition() {
