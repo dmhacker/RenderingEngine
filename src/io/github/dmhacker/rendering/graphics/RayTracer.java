@@ -29,10 +29,9 @@ import io.github.dmhacker.rendering.objects.Object3d;
 import io.github.dmhacker.rendering.objects.Properties;
 import io.github.dmhacker.rendering.objects.Sphere;
 import io.github.dmhacker.rendering.objects.Triangle;
-import io.github.dmhacker.rendering.objects.meshes.BinarySTLObject;
 import io.github.dmhacker.rendering.objects.meshes.GenericMesh;
 import io.github.dmhacker.rendering.objects.meshes.Mesh;
-import io.github.dmhacker.rendering.objects.meshes.TextSTLObject;
+import io.github.dmhacker.rendering.objects.meshes.STLObject;
 import io.github.dmhacker.rendering.vectors.Quaternion;
 import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
@@ -44,7 +43,7 @@ public class RayTracer extends JPanel {
 	// Rendering Options
 	//================================================================================
 	private static final int THREADS = Runtime.getRuntime().availableProcessors();
-	private static final double ZOOM = 1;
+	private static final double ZOOM = 2;
 	
 	//================================================================================
 	// Lighting Properties
@@ -178,14 +177,15 @@ public class RayTracer extends JPanel {
 		// Mesh letterS = new TextSTLObject("C:/Users/David Hacker/3D Objects/Alphabet/Letter_S.stl", new Vec3d(0.8, -1, 2), 0.9, false, new Properties(new Color(255, 167, 38), Material.OPAQUE, 0.2, 1.0));
 		
 		// Mesh drinkingCup = new BinarySTLObject("C:/Users/David Hacker/3D Objects/DrinkingCup.stl", new Vec3d(-0.5, -1.0, 1.5), false, new Properties(new Color(255, 255, 255), Material.OPAQUE, 0.4, 1));
-		Mesh teapot = new BinarySTLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0.8, -1, 2.7), 1, new Properties(Color.YELLOW, Material.SHINY, 0.2, 1));
+		Mesh teapot = new STLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1, 2.1), 1, new Properties(Color.YELLOW, Material.SHINY, 0.2, 1));
 		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), 1, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
 		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(-1, -0.5, 3), 1, new Properties(Color.PINK, Material.SHINY, 0.2, 1.0));
-		// Mesh stanfordBunny = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1.3, -1.025, 1.3), 0.8, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		Mesh stanfordDragon = new BinarySTLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.5, 1.2), 0.75, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		// Mesh stanfordBunny = new STLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1.3, -1.025, 1.3), 0.8, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
+		// Mesh stanfordDragon = new STLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.5, 1.2), 0.75, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
 		// Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
 		// Mesh skull = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Skull.stl", new Vec3d(-0.5, -1, 2.7), 0.9, new Properties(Color.WHITE, Material.OPAQUE, 0.2, 1));
-		Mesh halfDonut = new TextSTLObject("C:/Users/David Hacker/3D Objects/HalfDonut.stl", new Vec3d(0.5, 0, 1), -1, new Properties(new Color(255, 189, 23), Material.SHINY, 0.3, 1.0));
+		// Mesh halfDonut = new STLObject("C:/Users/David Hacker/3D Objects/HalfDonut.stl", new Vec3d(0.5, 0, 1), -1, new Properties(new Color(255, 189, 23), Material.SHINY, 0.3, 1.0));
+		// Mesh gravestone = new STLObject("C:/Users/David Hacker/3D Objects/Gravestone.stl", new Vec3d(0, -1.05, 2), 1, new Properties(new Color(255, 255, 255), Material.OPAQUE, 0.3, 1.0));
 		
 		// addMesh(letterW);
 		// addMesh(letterH);
@@ -194,15 +194,15 @@ public class RayTracer extends JPanel {
 		addMesh(teapot);
 		// addMesh(torusKnot);
 		// addMesh(skull);
-		addMesh(stanfordDragon);
+		// addMesh(stanfordDragon);
 		// addMesh(stanfordBunny);
 		// addMesh(mandelbulb);
 		// addMesh(tieFront);
-		addMesh(halfDonut);
+		// addMesh(gravestone);
 		
-		objects.add(new Sphere(new Vec3d(0, -0.5, 5), 0.5, new Properties(Color.GREEN, Material.SHINY, 0.4, 1)));
-		objects.add(new Sphere(new Vec3d(-0.05, -0.9, 1.8), 0.1, new Properties(Color.MAGENTA, Material.SHINY, 0.4, 1)));
-		objects.add(new Sphere(new Vec3d(0.35, -0.8, 1.6), 0.2, new Properties(Color.CYAN, Material.SHINY, 0.4, 1)));
+		// objects.add(new Sphere(new Vec3d(0, -0.5, 5), 0.5, new Properties(Color.GREEN, Material.SHINY, 0.4, 1)));
+		// objects.add(new Sphere(new Vec3d(-0.05, -0.9, 1.8), 0.1, new Properties(Color.MAGENTA, Material.SHINY, 0.4, 1)));
+		// objects.add(new Sphere(new Vec3d(0.35, -0.8, 1.6), 0.2, new Properties(Color.CYAN, Material.SHINY, 0.4, 1)));
 		
 		Collection<JCheckBox> checkBoxes = RayTracerOption.getCheckboxes();
 		Object[] content = new Object[checkBoxes.size() + 1];
