@@ -205,6 +205,10 @@ public class Triangle implements Object3d {
 	public Properties getProperties() {
 		return properties;
 	}
+	
+	public void setProperties(Properties properties) {
+		this.properties = properties;
+	}
 
 	@Override
 	public List<Vec3d> getBoundingVertices() {

@@ -21,6 +21,10 @@ public class STLObject implements Mesh {
 	private Map<Vec3d, Set<Triangle>> vertexMap;
 	private List<Triangle> facets;
 	
+	public STLObject(String fileName, Properties properties) {
+		this(fileName, new Vec3d(0, 0, 0), 1, properties);
+	}
+	
 	public STLObject(String fileName, Vec3d center, double scale, Properties properties) {
 		try {
 			Scanner sc = new Scanner(new FileReader(fileName));
@@ -145,6 +149,54 @@ public class STLObject implements Mesh {
 				}
 			}
 		}
+	}
+	
+	public Mesh translate(Vec3d translation) {
+		for (Triangle facet : facets) {
+			facet.translate(translation);
+		}
+		vertexMap.clear();
+		for (Triangle triangle : facets) {
+			for (Vec3d vertex : triangle.getVertices()) {
+				if (vertexMap.containsKey(vertex)) {
+					vertexMap.get(vertex).add(triangle);
+				}
+				else {
+					Set<Triangle> triangles = new HashSet<Triangle>();
+					triangles.add(triangle);
+					vertexMap.put(vertex, triangles);
+				}
+			}
+		}
+		return this;
+	}
+	
+	public Mesh scale(double scaleBy) {
+		for (Triangle facet : facets) {
+			facet.scale(scaleBy);
+		}
+		vertexMap.clear();
+		for (Triangle triangle : facets) {
+			for (Vec3d vertex : triangle.getVertices()) {
+				if (vertexMap.containsKey(vertex)) {
+					vertexMap.get(vertex).add(triangle);
+				}
+				else {
+					Set<Triangle> triangles = new HashSet<Triangle>();
+					triangles.add(triangle);
+					vertexMap.put(vertex, triangles);
+				}
+			}
+		}
+		return this;
+	}
+
+	@Override
+	public Mesh setProperties(Properties properties) {
+		for (Triangle facet : facets) {
+			facet.setProperties(properties);
+		}
+		return this;
 	}
 
 	public List<Triangle> getFacets() {

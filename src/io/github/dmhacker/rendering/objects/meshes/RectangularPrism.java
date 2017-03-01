@@ -53,6 +53,54 @@ public class RectangularPrism implements Mesh {
 			}
 		}
 	}
+	
+	public Mesh translate(Vec3d translation) {
+		for (Triangle facet : facets) {
+			facet.translate(translation);
+		}
+		vertexMap.clear();
+		for (Triangle triangle : facets) {
+			for (Vec3d vertex : triangle.getVertices()) {
+				if (vertexMap.containsKey(vertex)) {
+					vertexMap.get(vertex).add(triangle);
+				}
+				else {
+					Set<Triangle> triangles = new HashSet<Triangle>();
+					triangles.add(triangle);
+					vertexMap.put(vertex, triangles);
+				}
+			}
+		}
+		return this;
+	}
+	
+	public Mesh scale(double scaleBy) {
+		for (Triangle facet : facets) {
+			facet.scale(scaleBy);
+		}
+		vertexMap.clear();
+		for (Triangle triangle : facets) {
+			for (Vec3d vertex : triangle.getVertices()) {
+				if (vertexMap.containsKey(vertex)) {
+					vertexMap.get(vertex).add(triangle);
+				}
+				else {
+					Set<Triangle> triangles = new HashSet<Triangle>();
+					triangles.add(triangle);
+					vertexMap.put(vertex, triangles);
+				}
+			}
+		}
+		return this;
+	}
+
+	@Override
+	public Mesh setProperties(Properties properties) {
+		for (Triangle facet : facets) {
+			facet.setProperties(properties);
+		}
+		return this;
+	}
 
 	public List<Triangle> getFacets() {
 		return facets;

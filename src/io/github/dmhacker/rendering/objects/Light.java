@@ -11,8 +11,12 @@ public class Light {
 	private double ks;
 	private double sh;
 	
-	public Light(Color color, Vec3d position, double diffuse, double specular, double specularHardness) {
-		this.sphere = new Sphere(position, 1.0 / Math.log(specularHardness), new Properties(color, Material.OPAQUE, 0, 1));
+	public static Light create(Color color, Vec3d position) {
+		return new Light(color, position, 0.9, 1.0, 5000); 
+	}
+	
+	private Light(Color color, Vec3d position, double diffuse, double specular, double specularHardness) {
+		this.sphere = new Sphere(position, 1.0 / Math.log(specularHardness), Properties.create(color, Material.OPAQUE).setReflectivity(0));
 		this.kd = diffuse;
 		this.ks = specular;
 		this.sh = specularHardness;
@@ -44,5 +48,20 @@ public class Light {
 	
 	public double getSpecularHardness() {
 		return sh;
+	}
+	
+	public Light setDiffusePower(double kd) {
+		this.kd = kd;
+		return this;
+	}
+	
+	public Light setSpecularPower(double ks) {
+		this.ks = ks;
+		return this;
+	}
+	
+	public Light getSpecularHardness(double sh) {
+		this.sh = sh;
+		return this;
 	}
 }

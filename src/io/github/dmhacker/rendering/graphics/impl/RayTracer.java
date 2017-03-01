@@ -21,12 +21,14 @@ import javax.imageio.ImageIO;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 
+import io.github.dmhacker.rendering.Constants;
 import io.github.dmhacker.rendering.graphics.RenderingEngine;
 import io.github.dmhacker.rendering.kdtrees.KDNode;
 import io.github.dmhacker.rendering.objects.Light;
 import io.github.dmhacker.rendering.objects.Material;
 import io.github.dmhacker.rendering.objects.Object3d;
 import io.github.dmhacker.rendering.objects.Properties;
+import io.github.dmhacker.rendering.objects.Scene;
 import io.github.dmhacker.rendering.objects.Sphere;
 import io.github.dmhacker.rendering.objects.Triangle;
 import io.github.dmhacker.rendering.objects.meshes.GenericMesh;
@@ -43,13 +45,10 @@ public class RayTracer extends RenderingEngine {
 	// Rendering Options
 	//================================================================================
 	private static final int THREADS = Runtime.getRuntime().availableProcessors();
-	private static final double ZOOM = 2;
 	
 	//================================================================================
 	// Lighting Properties
 	//================================================================================
-	private static final float[] BACKGROUND = toColorArray(Color.BLACK);
-	
 	private static final double LIGHT_AMBIENCE = 0.1;
 	private static final double LIGHT_ATTENUATION_MEDIUM = 1.64;
 	
@@ -88,15 +87,12 @@ public class RayTracer extends RenderingEngine {
 	private final int height;
 	private final int area;
 	
-	private Vec3d camera;
-	private Quaternion cameraRotation;
-	private List<Object3d> objects;
-	private List<Light> lights;
+	private Scene scene;
 	private Map<Vec3d, Integer> edgePixels;
 	
 	private KDNode tree;
 	
-	public RayTracer(int width, int height) {
+	public RayTracer(int width, int height, Scene scene) {
 		setFocusable(true);
 		requestFocusInWindow();
 				
@@ -145,64 +141,8 @@ public class RayTracer extends RenderingEngine {
 			
 		});
 		
-		this.camera = new Vec3d(0, 0.25, -1);
-		this.cameraRotation = new Quaternion(0, 0, 0, 0);
-		
-		this.lights = new ArrayList<>();
-		lights.add(new Light(Color.WHITE, new Vec3d(-1, 3, -2), 0.9, 1.0, 500));
-		// lights.add(new Light(Color.WHITE, new Vec3d(-5, 2, 8), 0.9, 1.0, 500));
-		// lights.add(new Light(Color.WHITE, new Vec3d(3, 2.5, 7), 0.9, 1.0, 500));
-		
-		this.objects = new ArrayList<>();
+		this.scene = scene;
 		this.edgePixels = new ConcurrentHashMap<>();
-		
-		addFloor(-1);
-
-		/*
-		Properties mirror = new Properties(new Color(196, 199, 206), Material.SHINY, 0.7, 1);
-		Vec3d tl = new Vec3d(-2, 1, 6);
-		Vec3d tr = new Vec3d(2, 1, 6);
-		Vec3d bl = new Vec3d(-2, -1, 6);
-		Vec3d br = new Vec3d(2, -1, 6);
-		Triangle t1 = new Triangle(null, bl, tl, tr, mirror);
-		Triangle t2 = new Triangle(null, bl, br, tr, mirror);
-		List<Triangle> ts = new ArrayList<Triangle>();
-		ts.add(t1);
-		ts.add(t2);
-		addMesh(new GenericMesh(ts));
-		*/
-		
-		// Mesh letterW = new TextSTLObject("C:/Users/David Hacker/3D Objects/Alphabet/Letter_W.stl", new Vec3d(-2, -1, 2), 1.4, false, new Properties(new Color(255, 167, 38), Material.OPAQUE, 0.2, 1.0));
-		// Mesh letterH = new TextSTLObject("C:/Users/David Hacker/3D Objects/Alphabet/Letter_H.stl", new Vec3d(-0.5, -1, 2), 1, false, new Properties(new Color(1, 87, 155), Material.OPAQUE, 0.2, 1.0));
-		// Mesh letterS = new TextSTLObject("C:/Users/David Hacker/3D Objects/Alphabet/Letter_S.stl", new Vec3d(0.8, -1, 2), 0.9, false, new Properties(new Color(255, 167, 38), Material.OPAQUE, 0.2, 1.0));
-		
-		// Mesh drinkingCup = new BinarySTLObject("C:/Users/David Hacker/3D Objects/DrinkingCup.stl", new Vec3d(-0.5, -1.0, 1.5), false, new Properties(new Color(255, 255, 255), Material.OPAQUE, 0.4, 1));
-		Mesh teapot = new STLObject("C:/Users/David Hacker/3D Objects/teapot.stl", new Vec3d(0, -1, 2.1), 1, new Properties(Color.YELLOW, Material.SHINY, 0.2, 1));
-		// Mesh tieFront = new BinarySTLObject("C:/Users/David Hacker/3D Objects/TIE-front.stl", new Vec3d(0, -1.0, 1.3), 1, new Properties(new Color(255, 189, 23), Material.OPAQUE, 0.5, 1));
-		// Mesh torusKnot = new TextSTLObject("C:/Users/David Hacker/3D Objects/TripleTorus.stl", new Vec3d(-1, -0.5, 3), 1, new Properties(Color.PINK, Material.SHINY, 0.2, 1.0));
-		// Mesh stanfordBunny = new STLObject("C:/Users/David Hacker/3D Objects/StanfordBunny.stl", new Vec3d(1.3, -1.025, 1.3), 0.8, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		// Mesh stanfordDragon = new STLObject("C:/Users/David Hacker/3D Objects/StanfordDragon.stl", new Vec3d(-1.2, -0.5, 1.2), 0.75, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		// Mesh mandelbulb = new BinarySTLObject("C:/Users/David Hacker/3D Objects/mandelbulb.stl", new Vec3d(-0.2, -1, 3), false, new Properties(new Color(140, 21, 21), Material.OPAQUE, 0.3, 1));
-		// Mesh skull = new BinarySTLObject("C:/Users/David Hacker/3D Objects/Skull.stl", new Vec3d(-0.5, -1, 2.7), 0.9, new Properties(Color.WHITE, Material.OPAQUE, 0.2, 1));
-		// Mesh halfDonut = new STLObject("C:/Users/David Hacker/3D Objects/HalfDonut.stl", new Vec3d(0.5, 0, 1), -1, new Properties(new Color(255, 189, 23), Material.SHINY, 0.3, 1.0));
-		// Mesh gravestone = new STLObject("C:/Users/David Hacker/3D Objects/Gravestone.stl", new Vec3d(0, -1.05, 2), 1, new Properties(new Color(255, 255, 255), Material.OPAQUE, 0.3, 1.0));
-		
-		// addMesh(letterW);
-		// addMesh(letterH);
-		// addMesh(letterS);
-		// addMesh(drinkingCup);
-		addMesh(teapot);
-		// addMesh(torusKnot);
-		// addMesh(skull);
-		// addMesh(stanfordDragon);
-		// addMesh(stanfordBunny);
-		// addMesh(mandelbulb);
-		// addMesh(tieFront);
-		// addMesh(gravestone);
-		
-		// objects.add(new Sphere(new Vec3d(0, -0.5, 5), 0.5, new Properties(Color.GREEN, Material.SHINY, 0.4, 1)));
-		// objects.add(new Sphere(new Vec3d(-0.05, -0.9, 1.8), 0.1, new Properties(Color.MAGENTA, Material.SHINY, 0.4, 1)));
-		// objects.add(new Sphere(new Vec3d(0.35, -0.8, 1.6), 0.2, new Properties(Color.CYAN, Material.SHINY, 0.4, 1)));
 		
 		Collection<JCheckBox> checkBoxes = RayTracerOption.getCheckboxes();
 		Object[] content = new Object[checkBoxes.size() + 1];
@@ -212,39 +152,17 @@ public class RayTracer extends RenderingEngine {
 			content[++counter] = cb;
 		}
 
-		int n =  JOptionPane.showConfirmDialog(this, content,  "Render "+objects.size()+" objects?", JOptionPane.YES_NO_OPTION); 
+		int n =  JOptionPane.showConfirmDialog(this, content,  "Render "+scene.getObjects().size()+" objects?", JOptionPane.YES_NO_OPTION); 
 		if (n != 0) {
 			System.exit(0);
 		}
 
 		if (RayTracerOption.KD_TREE.get()) {
 			long timestamp = System.currentTimeMillis();
-			this.tree = KDNode.build(null, objects, 0);
+			this.tree = KDNode.build(null, scene.getObjects(), 0);
 			long generationTime = System.currentTimeMillis() - timestamp;
 			System.out.println("kd-tree generation: "+generationTime+"ms ("+Math.round(generationTime / 1000.0)+"s)");
 		}	
-	}
-	
-	public void addFloor(double surfaceY) {
-		Vec3d topLeft = new Vec3d(-10000, surfaceY, 10000);
-		Vec3d bottomLeft = new Vec3d(-10000, surfaceY, -10000);
-		Vec3d topRight = new Vec3d(10000, surfaceY, 10000);
-		Vec3d bottomRight = new Vec3d(10000, surfaceY, -10000);
-
-		Properties floorProperties = new Properties(new Color(130, 82, 1), Material.SHINY, 0.4, 1);
-		Triangle topLeftPortion = new Triangle(null, bottomLeft, topLeft, topRight, floorProperties);
-		Triangle bottomRightPortion = new Triangle(null, bottomLeft, bottomRight, topRight, floorProperties);
-		
-		List<Triangle> floorTriangles = new ArrayList<Triangle>();
-		floorTriangles.add(topLeftPortion);
-		floorTriangles.add(bottomRightPortion);
-		GenericMesh floorMesh = new GenericMesh(floorTriangles);
-		
-		addMesh(floorMesh);
-	}
-	
-	public void addMesh(Mesh mesh) {
-		objects.addAll(mesh.getFacets());
 	}
 	
 	public void start() {
@@ -268,7 +186,7 @@ public class RayTracer extends RenderingEngine {
 		rendering.set(true);
 		AtomicInteger threadsCompleted = new AtomicInteger();
 		AtomicInteger pixel = new AtomicInteger();
-		final double scale = 1.0 / ZOOM / Math.min(width, height);
+		final double scale = 1.0 / scene.getZoom() / Math.min(width, height);
 		final double sampleLength = scale / ANTIALIASING_SAMPLE_SUBDIVISIONS;
 		for (int t = 0; t < THREADS; t++) {
 			new Thread() {
@@ -292,8 +210,8 @@ public class RayTracer extends RenderingEngine {
 									double nx = minX + i * sampleLength;
 									double ny = minY + j * sampleLength;
 									Vec3d point;
-									point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0).rotate(cameraRotation);
-									float[] sample = cast(Ray.between(camera, point), px, py);
+									point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0).rotate(scene.getCameraRotationQuaternion());
+									float[] sample = cast(Ray.between(scene.getCamera(), point), px, py);
 									for (int k = 0; k < 3; k++)
 										rawColor[k] += gaussian(i - GAUSSIAN_MEAN, j - GAUSSIAN_MEAN) * sample[k];
 								}
@@ -303,8 +221,8 @@ public class RayTracer extends RenderingEngine {
 						}
 						else {
 							Vec3d point;
-							point = new Vec3d(x, y, 0).rotate(cameraRotation);
-							rawColor = cast(Ray.between(camera, point), px, py);
+							point = new Vec3d(x, y, scene.getCamera().getZ() + scene.getCameraSize()).rotate(scene.getCameraRotationQuaternion());
+							rawColor = cast(Ray.between(scene.getCamera(), point), px, py);
 						}
 						image.setRGB(px, py, (255 << 24) | ((int) Math.min(rawColor[0], 255) << 16) | ((int) Math.min(rawColor[1], 255) << 8) | ((int) Math.min(rawColor[2], 255)));
 						repaint(px, py, 1, 1);
@@ -380,10 +298,10 @@ public class RayTracer extends RenderingEngine {
 	}
 	
 	private float[] cast(Ray ray, int pixelWidth, int pixelHeight) {
-		return cast(ray, 0, pixelWidth, pixelHeight);
+		return cast(ray, pixelWidth, pixelHeight, 0);
 	}
 	
-	private float[] cast(Ray ray, int depth, int pixelWidth, int pixelHeight) {
+	private float[] cast(Ray ray, int pixelWidth, int pixelHeight, int depth) {
 		float[] colors = {0f, 0f, 0f};
 		
 		Object3d closest = null;
@@ -395,7 +313,7 @@ public class RayTracer extends RenderingEngine {
 			tMin = (double) ret[1];
 		}
 		else {
-			for (Object3d obj : objects) {
+			for (Object3d obj : scene.getObjects()) {
 				double t = obj.getIntersection(ray);
 				if (t > 0 && t < tMin) {
 					tMin = t;
@@ -406,7 +324,7 @@ public class RayTracer extends RenderingEngine {
 		
 		if (RayTracerOption.VIEW_LIGHT_SOURCES.get()) {
 			Light hitLight = null;
-			for (Light light : lights) {
+			for (Light light : scene.getLights()) {
 				double tlight = light.getIntersection(ray);
 				if (tlight > 0 && tlight < tMin) {
 					tMin = tlight;
@@ -422,7 +340,7 @@ public class RayTracer extends RenderingEngine {
 		}
 		
 		if (closest == null) {
-			return BACKGROUND;
+			return Constants.BACKGROUND_RGB;
 		}
 		
 		Vec3d intersectionPoint = ray.evaluate(tMin);
@@ -433,7 +351,7 @@ public class RayTracer extends RenderingEngine {
 				Vec3d v1 = triangle.getVertices().get(i);
 				Vec3d v2 = triangle.getVertices().get((i + 1) % 3);
 				double dist = distanceToSegment(intersectionPoint, v1, v2);
-				if (dist < 0.0015 / ZOOM) {
+				if (dist < 0.0015 / scene.getZoom()) {
 					edgePixels.put(new Vec3d(pixelWidth, pixelHeight, 0), Color.WHITE.getRGB());
 					break;
 				}
@@ -447,7 +365,7 @@ public class RayTracer extends RenderingEngine {
 		else if (closest instanceof Triangle) {
 			normal = ((Triangle) closest).getNormal(ray, intersectionPoint);
 		}
-		for (Light light : lights) {
+		for (Light light : scene.getLights()) {
 			Vec3d unnormalizedLightVector = light.getPosition().subtract(intersectionPoint);
 			Vec3d lightVector = unnormalizedLightVector.normalize();
 			Vec3d halfwayVector = lightVector.subtract(ray.getDirection()).normalize();
@@ -501,14 +419,14 @@ public class RayTracer extends RenderingEngine {
 				if (material == Material.SHINY || material == Material.SHINY_AND_TRANSPARENT) {
 					double kr = closest.getProperties().getReflectivity();
 					Vec3d reflectDirection = ray.getDirection().subtract(normal.multiply(2 * ray.getDirection().dotProduct(normal)));
-					float[] reflectColors = cast(new Ray(intersectionPoint, reflectDirection), depth + 1, pixelWidth, pixelHeight);
+					float[] reflectColors = cast(new Ray(intersectionPoint, reflectDirection), pixelWidth, pixelHeight, depth + 1);
 					colors[0] += falloffScale * kr * reflectColors[0];
 					colors[1] += falloffScale * kr * reflectColors[1];
 					colors[2] += falloffScale * kr * reflectColors[2];
 				}
 				if (closest.isTransparent()) {
 					Vec3d transmitDirection = ray.getDirection();
-					float[] transmittedColors = cast(new Ray(intersectionPoint.add(transmitDirection.multiply(0.000001)), transmitDirection), depth + 1, pixelWidth, pixelHeight);
+					float[] transmittedColors = cast(new Ray(intersectionPoint.add(transmitDirection.multiply(0.000001)), transmitDirection), pixelWidth, pixelHeight, depth + 1);
 					colors[0] += falloffScale * transmittedColors[0];
 					colors[1] += falloffScale * transmittedColors[1];
 					colors[2] += falloffScale * transmittedColors[2];
@@ -527,7 +445,7 @@ public class RayTracer extends RenderingEngine {
 			tShadow = (double) ret[1];
 		}
 		else {
-			for (Object3d obj : objects) {
+			for (Object3d obj : scene.getObjects()) {
 				if (obj.isTransparent()) {
 					continue;
 				}

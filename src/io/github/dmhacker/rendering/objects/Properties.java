@@ -8,11 +8,11 @@ public class Properties {
 	private double kr;
 	private double n;
 	
-	public Properties() {
-		this(Color.WHITE, Material.OPAQUE, 0.0, 1.0);
+	public static Properties create(Color color, Material material) {
+		return new Properties(color, material, 0.0, 1.0);
 	}
 	
-	public Properties(Color color, Material material, double reflectivity, double indexOfRefraction) {
+	private Properties(Color color, Material material, double reflectivity, double indexOfRefraction) {
 		this.color = color;
 		this.material = material;
 		this.kr = reflectivity;
@@ -33,5 +33,15 @@ public class Properties {
 	
 	public double getRefractiveIndex() {
 		return n;
+	}
+	
+	public Properties setReflectivity(double kr) {
+		this.kr = kr;
+		return this;
+	}
+	
+	public Properties setRefractiveIndex(double n) {
+		this.n = n;
+		return this;
 	}
 }
