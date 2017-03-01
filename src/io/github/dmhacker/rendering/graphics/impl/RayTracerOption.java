@@ -1,4 +1,4 @@
-package io.github.dmhacker.rendering.graphics;
+package io.github.dmhacker.rendering.graphics.impl;
 
 import java.util.Collection;
 import java.util.EnumMap;

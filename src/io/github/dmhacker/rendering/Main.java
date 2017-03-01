@@ -2,7 +2,7 @@ package io.github.dmhacker.rendering;
 
 import javax.swing.SwingUtilities;
 
-import io.github.dmhacker.rendering.graphics.RenderFrame;
+import io.github.dmhacker.rendering.graphics.RenderingFrame;
 
 public class Main {
 	
@@ -11,7 +11,7 @@ public class Main {
 
 			@Override
 			public void run() {
-				RenderFrame frame = new RenderFrame();
+				RenderingFrame frame = new RenderingFrame();
 				frame.start();
 			}
 		});

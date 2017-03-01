@@ -1,4 +1,4 @@
-package io.github.dmhacker.rendering.graphics;
+package io.github.dmhacker.rendering.graphics.impl;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
+import io.github.dmhacker.rendering.graphics.RenderingEngine;
 import io.github.dmhacker.rendering.kdtrees.KDNode;
 import io.github.dmhacker.rendering.objects.Light;
 import io.github.dmhacker.rendering.objects.Material;
@@ -36,7 +36,7 @@ import io.github.dmhacker.rendering.vectors.Quaternion;
 import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
-public class RayTracer extends JPanel {
+public class RayTracer extends RenderingEngine {
 	private static final long serialVersionUID = 1L;
 	
 	//================================================================================

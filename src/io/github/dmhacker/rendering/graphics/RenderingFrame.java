@@ -10,12 +10,13 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
 import io.github.dmhacker.rendering.Main;
+import io.github.dmhacker.rendering.graphics.impl.RayTracer;
 
-public class RenderFrame extends JFrame {
+public class RenderingFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
-	private RayTracer panel;
+	private RenderingEngine panel;
 	
-	public RenderFrame() {
+	public RenderingFrame() {
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		
 		int width = screen.width + 4; // So the frame goes to the edge of the screen
