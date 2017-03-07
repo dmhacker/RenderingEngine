@@ -58,9 +58,18 @@ public class Vec3d {
 		return Math.sqrt(distanceSquared());
 	}
 	
-	public Vec3d rotate(Quaternion q) {
-		Vec3d t = q.getAxisVector().cross(this).multiply(2);
-		return add(t.multiply(q.getW())).add(q.getAxisVector().cross(t));
+	// Using https://en.wikipedia.org/wiki/Rodrigues'_rotation_formula
+	public Vec3d rotate(Vec3d axis, double angle) {
+		if ((axis.distanceSquared() - 1) > Constants.EPSILON)
+			axis = axis.normalize();
+		return this.multiply(Math.cos(angle))
+				.add(this.cross(axis).multiply(Math.sin(angle)))
+				.add(axis.multiply(this.dotProduct(axis) * (1 - Math.cos(angle))));
+	}
+	
+	public Vec3d rotateAroundOrigin(Vec3d origin, Vec3d axis, double angle) {
+		Vec3d to = this.subtract(origin);
+		return origin.add(to.rotate(axis, angle));
 	}
 	
 	public double distanceSquared() {

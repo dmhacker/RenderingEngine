@@ -7,9 +7,7 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -27,14 +25,9 @@ import io.github.dmhacker.rendering.kdtrees.KDNode;
 import io.github.dmhacker.rendering.objects.Light;
 import io.github.dmhacker.rendering.objects.Material;
 import io.github.dmhacker.rendering.objects.Object3d;
-import io.github.dmhacker.rendering.objects.Properties;
 import io.github.dmhacker.rendering.objects.Scene;
 import io.github.dmhacker.rendering.objects.Sphere;
 import io.github.dmhacker.rendering.objects.Triangle;
-import io.github.dmhacker.rendering.objects.meshes.GenericMesh;
-import io.github.dmhacker.rendering.objects.meshes.Mesh;
-import io.github.dmhacker.rendering.objects.meshes.STLObject;
-import io.github.dmhacker.rendering.vectors.Quaternion;
 import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
@@ -170,6 +163,10 @@ public class RayTracer extends RenderingEngine {
 		render();
 	}
 	
+	public void close() {
+		running.set(false);
+	}
+	
 	public void render() {
 		new Thread() {
 			
@@ -209,9 +206,9 @@ public class RayTracer extends RenderingEngine {
 								for (int j = 0; j < ANTIALIASING_SAMPLE_SUBDIVISIONS; j++) {
 									double nx = minX + i * sampleLength;
 									double ny = minY + j * sampleLength;
-									Vec3d point;
-									point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, 0).rotate(scene.getCameraRotationQuaternion());
-									float[] sample = cast(Ray.between(scene.getCamera(), point), px, py);
+									Vec3d point = new Vec3d(nx + Math.random() * sampleLength, ny + Math.random() * sampleLength, scene.getCamera().getZ() + scene.getCameraSize()).rotateAroundOrigin(scene.getCamera(), scene.getCameraRotationAxis(), scene.getCameraRotationAngle());
+									Ray ray = Ray.between(scene.getCamera(), point);
+									float[] sample = cast(ray, px, py);
 									for (int k = 0; k < 3; k++)
 										rawColor[k] += gaussian(i - GAUSSIAN_MEAN, j - GAUSSIAN_MEAN) * sample[k];
 								}
@@ -220,9 +217,9 @@ public class RayTracer extends RenderingEngine {
 								rawColor[i] *= GAUSSIAN_SCALE;
 						}
 						else {
-							Vec3d point;
-							point = new Vec3d(x, y, scene.getCamera().getZ() + scene.getCameraSize()).rotate(scene.getCameraRotationQuaternion());
-							rawColor = cast(Ray.between(scene.getCamera(), point), px, py);
+							Vec3d point = new Vec3d(x, y, scene.getCamera().getZ() + scene.getCameraSize()).rotateAroundOrigin(scene.getCamera(), scene.getCameraRotationAxis(), scene.getCameraRotationAngle());
+							Ray ray = Ray.between(scene.getCamera(), point);
+							rawColor = cast(ray, px, py);
 						}
 						image.setRGB(px, py, (255 << 24) | ((int) Math.min(rawColor[0], 255) << 16) | ((int) Math.min(rawColor[1], 255) << 8) | ((int) Math.min(rawColor[2], 255)));
 						repaint(px, py, 1, 1);
@@ -242,73 +239,22 @@ public class RayTracer extends RenderingEngine {
 		System.out.println("Render time: "+renderTime+"ms ("+Math.round(renderTime / 1000.0)+"s)");
 	}
 	
-	private Object[] parseTree(KDNode node, Ray ray, boolean shadow) {
-		if (node.getBoundingBox().isIntersecting(ray)) {
-			
-			if (node.isLeaf()) {
-				double tMin = Double.MAX_VALUE;
-				Object3d closest = null;
-				for (Object3d obj : node.getObjects()) {
-					if (shadow && obj.isTransparent()) {
-						continue;
-					}
-					double t = obj.getIntersection(ray);
-					if (t > 0 && t < tMin) {
-						tMin = t;
-						closest = obj;
-					}
-				}
-				
-				return new Object[] {closest, tMin};
-			}
-			
-			boolean leftExists = node.getLeft() != null && !node.getLeft().getObjects().isEmpty();
-			boolean rightExists = node.getRight() != null && !node.getRight().getObjects().isEmpty();
-			
-			Object[] leftNode = new Object[] {null, Double.MAX_VALUE};
-			Object[] rightNode =  new Object[] {null, Double.MAX_VALUE};
-			
-			if (leftExists) {
-				leftNode = parseTree(node.getLeft(), ray, shadow);
-			}
-			
-			if (rightExists) {
-				rightNode = parseTree(node.getRight(), ray, shadow);
-			}
-			
-			if (leftNode[0] == null && rightNode[0] == null) {
-				return leftNode; // Could be either
-			}
-			if (leftNode[0] == null && rightNode[0] != null) {
-				return rightNode;
-			}
-			if (leftNode[0] != null && rightNode[0] == null) {
-				return leftNode;
-			}
-			if (leftNode[0] != null && rightNode[0] != null) {
-				if ((double) leftNode[1] < (double) rightNode[1]) {
-					return leftNode;
-				}
-				else {
-					return rightNode;
-				}
-			}
-		}
-		return new Object[] {null, Double.MAX_VALUE};
-	}
-	
 	private float[] cast(Ray ray, int pixelWidth, int pixelHeight) {
-		return cast(ray, pixelWidth, pixelHeight, 0);
+		return cast(ray, 0, pixelWidth, pixelHeight);
 	}
 	
-	private float[] cast(Ray ray, int pixelWidth, int pixelHeight, int depth) {
+	private float[] cast(Ray ray, int depth, int pixelWidth, int pixelHeight) {
 		float[] colors = {0f, 0f, 0f};
+		
+		if (depth == RECURSIVE_DEPTH) {
+			return colors;
+		}
 		
 		Object3d closest = null;
 		double tMin = Double.MAX_VALUE;
 		
 		if (RayTracerOption.KD_TREE.get()) {
-			Object[] ret = parseTree(tree, ray, false);
+			Object[] ret = KDNode.parseTree(tree, ray, false);
 			closest = (Object3d) ret[0];
 			tMin = (double) ret[1];
 		}
@@ -415,22 +361,20 @@ public class RayTracer extends RenderingEngine {
 			}
 			for (int i = 0; i < 3; i++)
 				colors[i] += additions[i];
-			if (depth < RECURSIVE_DEPTH) {
-				if (material == Material.SHINY || material == Material.SHINY_AND_TRANSPARENT) {
-					double kr = closest.getProperties().getReflectivity();
-					Vec3d reflectDirection = ray.getDirection().subtract(normal.multiply(2 * ray.getDirection().dotProduct(normal)));
-					float[] reflectColors = cast(new Ray(intersectionPoint, reflectDirection), pixelWidth, pixelHeight, depth + 1);
-					colors[0] += falloffScale * kr * reflectColors[0];
-					colors[1] += falloffScale * kr * reflectColors[1];
-					colors[2] += falloffScale * kr * reflectColors[2];
-				}
-				if (closest.isTransparent()) {
-					Vec3d transmitDirection = ray.getDirection();
-					float[] transmittedColors = cast(new Ray(intersectionPoint.add(transmitDirection.multiply(0.000001)), transmitDirection), pixelWidth, pixelHeight, depth + 1);
-					colors[0] += falloffScale * transmittedColors[0];
-					colors[1] += falloffScale * transmittedColors[1];
-					colors[2] += falloffScale * transmittedColors[2];
-				}
+			if (material == Material.SHINY || material == Material.SHINY_AND_TRANSPARENT) {
+				double kr = closest.getProperties().getReflectivity();
+				Vec3d reflectDirection = ray.getDirection().subtract(normal.multiply(2 * ray.getDirection().dotProduct(normal)));
+				float[] reflectColors = cast(new Ray(intersectionPoint, reflectDirection), depth + 1, pixelWidth, pixelHeight);
+				colors[0] += falloffScale * kr * reflectColors[0];
+				colors[1] += falloffScale * kr * reflectColors[1];
+				colors[2] += falloffScale * kr * reflectColors[2];
+			}
+			if (closest.isTransparent()) {
+				Vec3d transmitDirection = ray.getDirection();
+				float[] transmittedColors = cast(new Ray(intersectionPoint.add(transmitDirection.multiply(0.000001)), transmitDirection), depth + 1, pixelWidth, pixelHeight);
+				colors[0] += falloffScale * transmittedColors[0];
+				colors[1] += falloffScale * transmittedColors[1];
+				colors[2] += falloffScale * transmittedColors[2];
 			}
 		}
 		return colors;
@@ -441,7 +385,7 @@ public class RayTracer extends RenderingEngine {
 		
 		double tShadow = Double.MAX_VALUE;
 		if (RayTracerOption.KD_TREE.get()) {
-			Object[] ret = parseTree(tree, shadowRay, true);
+			Object[] ret = KDNode.parseTree(tree, shadowRay, true);
 			tShadow = (double) ret[1];
 		}
 		else {
@@ -457,10 +401,6 @@ public class RayTracer extends RenderingEngine {
 		}
 		
 		return tShadow < Double.MAX_VALUE && tShadow < target.getIntersection(shadowRay);
-	}
-	
-	public void close() {
-		running.set(false);
 	}
 	
     protected void paintComponent(Graphics g) {
@@ -495,14 +435,6 @@ public class RayTracer extends RenderingEngine {
 		Color color3 = new Color((int) (r3 * 255), (int) (g3 * 255), (int) (b3 * 255), (int) (a3 * 255));
 		return color3;
 	}
-
-	private static float[] toColorArray(Color color) {
-		return new float[] {
-				color.getRed(),
-				color.getGreen(),
-				color.getBlue()
-		};
-	} 
 	
 	public static double distanceToSegment(Vec3d v, Vec3d a, Vec3d b) {
 		Vec3d ab = b.subtract(a);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.dmhacker.rendering.objects.Object3d;
+import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
 public class KDNode {
@@ -120,5 +121,60 @@ public class KDNode {
 		}
 		
 		return node;
+	}
+	
+	public static Object[] parseTree(KDNode node, Ray ray, boolean shadow) {
+		if (node.getBoundingBox().isIntersecting(ray)) {
+			
+			if (node.isLeaf()) {
+				double tMin = Double.MAX_VALUE;
+				Object3d closest = null;
+				for (Object3d obj : node.getObjects()) {
+					if (shadow && obj.isTransparent()) {
+						continue;
+					}
+					double t = obj.getIntersection(ray);
+					if (t > 0 && t < tMin) {
+						tMin = t;
+						closest = obj;
+					}
+				}
+				
+				return new Object[] {closest, tMin};
+			}
+			
+			boolean leftExists = node.getLeft() != null && !node.getLeft().getObjects().isEmpty();
+			boolean rightExists = node.getRight() != null && !node.getRight().getObjects().isEmpty();
+			
+			Object[] leftNode = new Object[] {null, Double.MAX_VALUE};
+			Object[] rightNode =  new Object[] {null, Double.MAX_VALUE};
+			
+			if (leftExists) {
+				leftNode = parseTree(node.getLeft(), ray, shadow);
+			}
+			
+			if (rightExists) {
+				rightNode = parseTree(node.getRight(), ray, shadow);
+			}
+			
+			if (leftNode[0] == null && rightNode[0] == null) {
+				return leftNode; // Could be either
+			}
+			if (leftNode[0] == null && rightNode[0] != null) {
+				return rightNode;
+			}
+			if (leftNode[0] != null && rightNode[0] == null) {
+				return leftNode;
+			}
+			if (leftNode[0] != null && rightNode[0] != null) {
+				if ((double) leftNode[1] < (double) rightNode[1]) {
+					return leftNode;
+				}
+				else {
+					return rightNode;
+				}
+			}
+		}
+		return new Object[] {null, Double.MAX_VALUE};
 	}
 }
