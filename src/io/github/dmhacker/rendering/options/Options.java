@@ -30,7 +30,6 @@ public class Options {
 			put("Wireframe rendering", true);
 			put("Anti-aliasing", false);
 			put("Soft shadows", false);
-			put("View light sources", false);
 		}});
 		RENDERING_ENGINE_OPTIONS.put("Bidirectional Path Tracer", new HashMap<String, Boolean>() {
 			private static final long serialVersionUID = 1L;

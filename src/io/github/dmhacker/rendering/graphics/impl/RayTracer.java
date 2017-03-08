@@ -7,7 +7,6 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -258,21 +257,19 @@ public class RayTracer extends RenderingEngine {
 			}
 		}
 		
-		if (engineConfig.get("View light sources").isSelected()) {
-			Light hitLight = null;
-			for (Light light : scene.getLights()) {
-				double tlight = light.getIntersection(ray);
-				if (tlight > 0 && tlight < tMin) {
-					tMin = tlight;
-					hitLight = light;
-				}
+		Light hitLight = null;
+		for (Light light : scene.getLights()) {
+			double tlight = light.getIntersection(ray);
+			if (tlight > 0 && tlight < tMin) {
+				tMin = tlight;
+				hitLight = light;
 			}
-			if (hitLight != null) {
-				Color lightColor = hitLight.getColor();
-				return new float[] {
-					lightColor.getRed(), lightColor.getGreen(), lightColor.getBlue(), 
-				};
-			}
+		}
+		if (hitLight != null) {
+			Color lightColor = hitLight.getColor();
+			return new float[] {
+				lightColor.getRed(), lightColor.getGreen(), lightColor.getBlue(), 
+			};
 		}
 		
 		if (closest == null) {

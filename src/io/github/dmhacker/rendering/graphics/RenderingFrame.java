@@ -24,6 +24,7 @@ import io.github.dmhacker.rendering.objects.Light;
 import io.github.dmhacker.rendering.objects.Material;
 import io.github.dmhacker.rendering.objects.Properties;
 import io.github.dmhacker.rendering.objects.Scene;
+import io.github.dmhacker.rendering.objects.Sphere;
 import io.github.dmhacker.rendering.objects.meshes.Mesh;
 import io.github.dmhacker.rendering.objects.meshes.STLObject;
 import io.github.dmhacker.rendering.options.Options;
@@ -58,8 +59,8 @@ public class RenderingFrame extends JFrame {
 			e.printStackTrace();
 		}
 		
-		Scene scene = new Scene(new Vec3d(0, 0.25, -1), new Vec3d(0, 1, 0), Math.PI / 5);
-		scene.add(Light.create(Color.WHITE, new Vec3d(-1, 3, -2)));
+		Scene scene = new Scene(new Vec3d(0, 0.25, -3), new Vec3d(0, 1, 0), 0.2);
+		scene.add(Light.create(Color.WHITE, new Vec3d(2, 3, -2)));
 		
 		Properties floorProperties = Properties.create(new Color(222, 184, 135), Material.SHINY).setReflectivity(0.4);
 		scene.addFloor(-1, floorProperties);
@@ -69,11 +70,12 @@ public class RenderingFrame extends JFrame {
 				"StanfordDragon.stl"
 		);
 		scene.add(meshes.get("teapot.stl")
-				.translate(new Vec3d(-0.3, -1, 1.1))
+				.translate(new Vec3d(-0.3, -1, 0.2))
 				.setProperties(Properties.create(Color.WHITE, Material.SHINY).setReflectivity(0.2)));
 		scene.add(meshes.get("StanfordDragon.stl")
-				.translate(new Vec3d(-2, -0.35, 1))
+				.translate(new Vec3d(-2, -0.32, 1))
 				.setProperties(Properties.create(Color.RED, Material.OPAQUE)));
+		scene.add(new Sphere(new Vec3d(-1, -0.8, -0.4), 0.2, Properties.create(Color.CYAN, Material.SHINY).setReflectivity(0.3)));
 		
 		Class<? extends RenderingEngine> clazz = Options.RENDERING_ENGINES.get(options.getSelectedEngine());
 		try {

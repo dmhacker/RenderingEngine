@@ -19,4 +19,6 @@ public interface Object3d {
 	public BoundingBox getBoundingBox();
 	
 	public boolean isTransparent();
+	
+	public void translate(Vec3d translation);
 }
