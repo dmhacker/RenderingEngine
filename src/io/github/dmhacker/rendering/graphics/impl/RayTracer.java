@@ -28,6 +28,7 @@ import io.github.dmhacker.rendering.objects.Object3d;
 import io.github.dmhacker.rendering.objects.Scene;
 import io.github.dmhacker.rendering.objects.Sphere;
 import io.github.dmhacker.rendering.objects.Triangle;
+import io.github.dmhacker.rendering.options.Options;
 import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
@@ -81,11 +82,12 @@ public class RayTracer extends RenderingEngine {
 	private final int area;
 	
 	private Scene scene;
+	private Map<String, JCheckBox> engineConfig;
 	private Map<Vec3d, Integer> edgePixels;
 	
 	private KDNode tree;
 	
-	public RayTracer(int width, int height, Scene scene) {
+	public RayTracer(int width, int height, Scene scene, Options options) {
 		setFocusable(true);
 		requestFocusInWindow();
 				
@@ -119,7 +121,7 @@ public class RayTracer extends RenderingEngine {
 					}
 				}
 				else if (e.getKeyChar() == 'w') {
-					if (rendering.get() || !RayTracerOption.WIREFRAME.get())
+					if (rendering.get() || !engineConfig.get("Wireframe rendering").isSelected())
 						return;
 					for (Entry<Vec3d, Integer> entry : edgePixels.entrySet()) {
 						int px = (int) entry.getKey().getX();
@@ -135,22 +137,10 @@ public class RayTracer extends RenderingEngine {
 		});
 		
 		this.scene = scene;
+		this.engineConfig = options.getSelectedEngineConfiguration();
 		this.edgePixels = new ConcurrentHashMap<>();
-		
-		Collection<JCheckBox> checkBoxes = RayTracerOption.getCheckboxes();
-		Object[] content = new Object[checkBoxes.size() + 1];
-		content[0] = "Options for ray tracing";
-		int counter = 0;
-		for (JCheckBox cb : checkBoxes) {
-			content[++counter] = cb;
-		}
 
-		int n =  JOptionPane.showConfirmDialog(this, content,  "Render "+scene.getObjects().size()+" objects?", JOptionPane.YES_NO_OPTION); 
-		if (n != 0) {
-			System.exit(0);
-		}
-
-		if (RayTracerOption.KD_TREE.get()) {
+		if (engineConfig.get("kd-tree").isSelected()) {
 			long timestamp = System.currentTimeMillis();
 			this.tree = KDNode.build(null, scene.getObjects(), 0);
 			long generationTime = System.currentTimeMillis() - timestamp;
@@ -198,7 +188,7 @@ public class RayTracer extends RenderingEngine {
 						double y = (-py + height / 2) * scale;
 						float[] rawColor;
 						// In both cases, it is assumed that the image plane is at z = 0
-						if (RayTracerOption.ANTI_ALIASING.get()) {
+						if (engineConfig.get("Anti-aliasing").isSelected()) {
 							rawColor = new float[3];
 							double minX = x - scale / 2;
 							double minY = y - scale / 2;
@@ -253,7 +243,7 @@ public class RayTracer extends RenderingEngine {
 		Object3d closest = null;
 		double tMin = Double.MAX_VALUE;
 		
-		if (RayTracerOption.KD_TREE.get()) {
+		if (engineConfig.get("kd-tree").isSelected()) {
 			Object[] ret = KDNode.parseTree(tree, ray, false);
 			closest = (Object3d) ret[0];
 			tMin = (double) ret[1];
@@ -268,7 +258,7 @@ public class RayTracer extends RenderingEngine {
 			}
 		}
 		
-		if (RayTracerOption.VIEW_LIGHT_SOURCES.get()) {
+		if (engineConfig.get("View light sources").isSelected()) {
 			Light hitLight = null;
 			for (Light light : scene.getLights()) {
 				double tlight = light.getIntersection(ray);
@@ -291,7 +281,7 @@ public class RayTracer extends RenderingEngine {
 		
 		Vec3d intersectionPoint = ray.evaluate(tMin);
 		
-		if (RayTracerOption.WIREFRAME.get() && depth == 0 && closest instanceof Triangle) {
+		if (engineConfig.get("Wireframe rendering").isSelected() && depth == 0 && closest instanceof Triangle) {
 			Triangle triangle = (Triangle) closest;
 			for (int i = 0; i < 3; i++) {
 				Vec3d v1 = triangle.getVertices().get(i);
@@ -309,7 +299,7 @@ public class RayTracer extends RenderingEngine {
 			normal = intersectionPoint.subtract(((Sphere) closest).getCenter()).normalize();
 		}
 		else if (closest instanceof Triangle) {
-			normal = ((Triangle) closest).getNormal(ray, intersectionPoint);
+			normal = ((Triangle) closest).getNormal(ray, intersectionPoint, engineConfig.get("Vertex normal interpolation").isSelected());
 		}
 		for (Light light : scene.getLights()) {
 			Vec3d unnormalizedLightVector = light.getPosition().subtract(intersectionPoint);
@@ -329,7 +319,7 @@ public class RayTracer extends RenderingEngine {
 			double bs = light.getSpecularPower() * specularIntensity * color.getBlue();
 			double falloffScale = 1.0 / Math.pow(1 + unnormalizedLightVector.distance() / (light.getRadius() * LIGHT_ATTENUATION_MEDIUM * 100), 2);
 			double shadowScale = 0;
-			if (RayTracerOption.SOFT_SHADOWS.get()) {
+			if (engineConfig.get("Soft shadows").isSelected()) {
 				for (int i = 0; i < SHADOW_SAMPLES; i++) {
 					double maxDistance = light.getRadius() / 2 * Math.sqrt(2);
 					double xVariance = Math.random() * maxDistance - maxDistance / 2;
@@ -384,7 +374,7 @@ public class RayTracer extends RenderingEngine {
 	private boolean castShadow(Ray shadowRay, Light target) {
 		
 		double tShadow = Double.MAX_VALUE;
-		if (RayTracerOption.KD_TREE.get()) {
+		if (engineConfig.get("kd-tree").isSelected()) {
 			Object[] ret = KDNode.parseTree(tree, shadowRay, true);
 			tShadow = (double) ret[1];
 		}

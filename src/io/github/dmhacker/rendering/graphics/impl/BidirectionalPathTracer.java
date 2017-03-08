@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
+import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 
 import io.github.dmhacker.rendering.Constants;
@@ -22,6 +23,7 @@ import io.github.dmhacker.rendering.kdtrees.KDNode;
 import io.github.dmhacker.rendering.objects.Light;
 import io.github.dmhacker.rendering.objects.Object3d;
 import io.github.dmhacker.rendering.objects.Scene;
+import io.github.dmhacker.rendering.options.Options;
 import io.github.dmhacker.rendering.vectors.Ray;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
@@ -50,10 +52,11 @@ public class BidirectionalPathTracer extends RenderingEngine {
 	private final int area;
 	
 	private Scene scene;
+	private Map<String, JCheckBox> engineConfig;
 	
 	private KDNode tree;
 	
-	public BidirectionalPathTracer(int width, int height, Scene scene) {
+	public BidirectionalPathTracer(int width, int height, Scene scene, Options options) {
 		setFocusable(true);
 		requestFocusInWindow();
 				
@@ -91,8 +94,9 @@ public class BidirectionalPathTracer extends RenderingEngine {
 		});
 		
 		this.scene = scene;
+		this.engineConfig = options.getSelectedEngineConfiguration();
 		
-		if (RayTracerOption.KD_TREE.get()) {
+		if (engineConfig.get("kd-tree").isSelected()) {
 			long timestamp = System.currentTimeMillis();
 			this.tree = KDNode.build(null, scene.getObjects(), 0);
 			long generationTime = System.currentTimeMillis() - timestamp;
@@ -197,7 +201,7 @@ public class BidirectionalPathTracer extends RenderingEngine {
 		Object3d closest = null;
 		double tMin = Double.MAX_VALUE;
 		
-		if (RayTracerOption.KD_TREE.get()) {
+		if (engineConfig.get("kd-tree").isSelected()) {
 			Object[] ret = KDNode.parseTree(tree, ray, false);
 			closest = (Object3d) ret[0];
 			tMin = (double) ret[1];

@@ -8,6 +8,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,20 +20,20 @@ import javax.swing.JFrame;
 
 import io.github.dmhacker.rendering.Constants;
 import io.github.dmhacker.rendering.Main;
-import io.github.dmhacker.rendering.graphics.impl.RayTracer;
 import io.github.dmhacker.rendering.objects.Light;
 import io.github.dmhacker.rendering.objects.Material;
 import io.github.dmhacker.rendering.objects.Properties;
 import io.github.dmhacker.rendering.objects.Scene;
 import io.github.dmhacker.rendering.objects.meshes.Mesh;
 import io.github.dmhacker.rendering.objects.meshes.STLObject;
+import io.github.dmhacker.rendering.options.Options;
 import io.github.dmhacker.rendering.vectors.Vec3d;
 
 public class RenderingFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private RenderingEngine panel;
 	
-	public RenderingFrame() {
+	public RenderingFrame(Options options) {
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		
 		int side = 1080; // Math.min(screen.width, screen.height) / 2;
@@ -57,7 +58,7 @@ public class RenderingFrame extends JFrame {
 			e.printStackTrace();
 		}
 		
-		Scene scene = new Scene(new Vec3d(0, 0.25, -1), new Vec3d(0, 1, 0), Math.PI / 8);
+		Scene scene = new Scene(new Vec3d(0, 0.25, -1), new Vec3d(0, 1, 0), Math.PI / 5);
 		scene.add(Light.create(Color.WHITE, new Vec3d(-1, 3, -2)));
 		
 		Properties floorProperties = Properties.create(new Color(222, 184, 135), Material.SHINY).setReflectivity(0.4);
@@ -65,17 +66,24 @@ public class RenderingFrame extends JFrame {
 		
 		Map<String, Mesh> meshes = loadMeshes("C:/Users/David Hacker/3D Objects",
 				"teapot.stl",
-				"Skull.stl"
+				"StanfordDragon.stl"
 		);
 		scene.add(meshes.get("teapot.stl")
-				.translate(new Vec3d(0, -1, 2.1))
+				.translate(new Vec3d(-0.3, -1, 1.1))
 				.setProperties(Properties.create(Color.WHITE, Material.SHINY).setReflectivity(0.2)));
-		scene.add(meshes.get("Skull.stl")
-				.translate(new Vec3d(-2, -1, 1.4))
-				.setProperties(Properties.create(Color.WHITE, Material.OPAQUE)));
+		scene.add(meshes.get("StanfordDragon.stl")
+				.translate(new Vec3d(-2, -0.35, 1))
+				.setProperties(Properties.create(Color.RED, Material.OPAQUE)));
 		
-		this.panel = new RayTracer(width, height, scene);
-		add(panel);
+		Class<? extends RenderingEngine> clazz = Options.RENDERING_ENGINES.get(options.getSelectedEngine());
+		try {
+			Constructor<? extends RenderingEngine> construct = clazz.getConstructor(int.class, int.class, Scene.class, Options.class);
+			this.panel = construct.newInstance(width, height, scene, options);
+			add(panel);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 		
 		addWindowListener(new WindowAdapter() {
             @Override

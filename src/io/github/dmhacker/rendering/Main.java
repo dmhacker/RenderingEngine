@@ -3,6 +3,9 @@ package io.github.dmhacker.rendering;
 import javax.swing.SwingUtilities;
 
 import io.github.dmhacker.rendering.graphics.RenderingFrame;
+import io.github.dmhacker.rendering.options.Options;
+import io.github.dmhacker.rendering.options.OptionsFrame;
+import io.github.dmhacker.rendering.options.OptionsListener;
 
 public class Main {
 	
@@ -11,8 +14,15 @@ public class Main {
 
 			@Override
 			public void run() {
-				RenderingFrame frame = new RenderingFrame();
-				frame.start();
+				new OptionsFrame(new Options(), new OptionsListener() {
+
+					@Override
+					public void onFinish(Options options) {
+						RenderingFrame frame = new RenderingFrame(options);
+						frame.start();
+					}
+					
+				});
 			}
 		});
 	}

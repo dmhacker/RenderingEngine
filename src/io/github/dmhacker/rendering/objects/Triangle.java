@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.dmhacker.rendering.Constants;
-import io.github.dmhacker.rendering.graphics.impl.RayTracerOption;
 import io.github.dmhacker.rendering.kdtrees.BoundingBox;
 import io.github.dmhacker.rendering.objects.meshes.Mesh;
 import io.github.dmhacker.rendering.vectors.Ray;
@@ -69,8 +68,8 @@ public class Triangle implements Object3d {
 		calculate();
 	}
 	
-	public Vec3d getNormal(Ray ray, Vec3d intersection) {
-		if (mesh != null && RayTracerOption.VERTEX_NORMAL_INTERPOLATION.get()) {
+	public Vec3d getNormal(Ray ray, Vec3d intersection, boolean vertexNormalInterpolationEnabled) {
+		if (mesh != null && vertexNormalInterpolationEnabled) {
 			return getVertexNormal(ray, intersection);
 		}
 		return getFaceNormal(ray);
