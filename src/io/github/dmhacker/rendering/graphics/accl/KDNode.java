@@ -1,4 +1,4 @@
-package io.github.dmhacker.rendering.kdtrees;
+package io.github.dmhacker.rendering.graphics.accl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -123,7 +123,7 @@ public class KDNode {
 		return node;
 	}
 	
-	public static Object[] parseTree(KDNode node, Ray ray, boolean shadow) {
+	public static KDNodeResults parseTree(KDNode node, Ray ray, boolean shadow) {
 		if (node.getBoundingBox().isIntersecting(ray)) {
 			
 			if (node.isLeaf()) {
@@ -140,14 +140,14 @@ public class KDNode {
 					}
 				}
 				
-				return new Object[] {closest, tMin};
+				return new KDNodeResults(closest, tMin);
 			}
 			
 			boolean leftExists = node.getLeft() != null && !node.getLeft().getObjects().isEmpty();
 			boolean rightExists = node.getRight() != null && !node.getRight().getObjects().isEmpty();
 			
-			Object[] leftNode = new Object[] {null, Double.MAX_VALUE};
-			Object[] rightNode =  new Object[] {null, Double.MAX_VALUE};
+			KDNodeResults leftNode = new KDNodeResults();
+			KDNodeResults rightNode = new KDNodeResults();
 			
 			if (leftExists) {
 				leftNode = parseTree(node.getLeft(), ray, shadow);
@@ -157,17 +157,20 @@ public class KDNode {
 				rightNode = parseTree(node.getRight(), ray, shadow);
 			}
 			
-			if (leftNode[0] == null && rightNode[0] == null) {
+			Object3d leftHit = leftNode.getObject();
+			Object3d rightHit = rightNode.getObject();
+			
+			if (leftHit == null && rightHit == null) {
 				return leftNode; // Could be either
 			}
-			if (leftNode[0] == null && rightNode[0] != null) {
+			if (leftHit == null && rightHit != null) {
 				return rightNode;
 			}
-			if (leftNode[0] != null && rightNode[0] == null) {
+			if (leftHit != null && rightHit == null) {
 				return leftNode;
 			}
-			if (leftNode[0] != null && rightNode[0] != null) {
-				if ((double) leftNode[1] < (double) rightNode[1]) {
+			if (leftHit != null && rightHit != null) {
+				if (leftNode.getIntersectionLength() < rightNode.getIntersectionLength()) {
 					return leftNode;
 				}
 				else {
@@ -175,6 +178,6 @@ public class KDNode {
 				}
 			}
 		}
-		return new Object[] {null, Double.MAX_VALUE};
+		return new KDNodeResults();
 	}
 }

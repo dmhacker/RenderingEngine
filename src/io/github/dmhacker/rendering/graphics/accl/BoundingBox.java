@@ -1,4 +1,4 @@
-package io.github.dmhacker.rendering.kdtrees;
+package io.github.dmhacker.rendering.graphics.accl;
 
 import java.util.ArrayList;
 import java.util.List;

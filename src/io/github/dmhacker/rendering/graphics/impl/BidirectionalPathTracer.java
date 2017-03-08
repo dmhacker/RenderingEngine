@@ -19,7 +19,8 @@ import javax.swing.JOptionPane;
 
 import io.github.dmhacker.rendering.Constants;
 import io.github.dmhacker.rendering.graphics.RenderingEngine;
-import io.github.dmhacker.rendering.kdtrees.KDNode;
+import io.github.dmhacker.rendering.graphics.accl.KDNode;
+import io.github.dmhacker.rendering.graphics.accl.KDNodeResults;
 import io.github.dmhacker.rendering.objects.Light;
 import io.github.dmhacker.rendering.objects.Object3d;
 import io.github.dmhacker.rendering.objects.Scene;
@@ -202,9 +203,9 @@ public class BidirectionalPathTracer extends RenderingEngine {
 		double tMin = Double.MAX_VALUE;
 		
 		if (engineConfig.get("kd-tree").isSelected()) {
-			Object[] ret = KDNode.parseTree(tree, ray, false);
-			closest = (Object3d) ret[0];
-			tMin = (double) ret[1];
+			KDNodeResults ret = KDNode.parseTree(tree, ray, false);
+			closest = ret.getObject();
+			tMin = ret.getIntersectionLength();
 		}
 		else {
 			for (Object3d obj : scene.getObjects()) {
